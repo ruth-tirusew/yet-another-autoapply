@@ -1,0 +1,21 @@
+{% if onboarding.show %}
+<div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-brand/20 mb-4">
+  <div class="flex items-center justify-between gap-3 mb-3">
+    <h3 class="font-semibold text-slate-900 dark:text-slate-100">Getting started</h3>
+    <span class="text-xs text-slate-500">{{ onboarding.done_count }}/{{ onboarding.total }} complete</span>
+  </div>
+  <ul class="space-y-2 text-sm">
+    {% for step in onboarding.steps %}
+    <li class="flex items-center gap-2">
+      {% if step.done %}
+      <span class="text-green-500">✓</span>
+      <span class="text-slate-500 line-through">{{ step.label }}</span>
+      {% else %}
+      <span class="text-slate-400">○</span>
+      <a href="{{ step.href }}" class="text-brand hover:underline font-medium">{{ step.label }}</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}

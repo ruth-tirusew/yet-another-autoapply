@@ -1,0 +1,22 @@
+Extract the requirements from this job posting.
+
+## Posting
+Title: {{ job_title }}
+Company: {{ job_company }}
+
+{{ job_text }}
+
+## Instructions
+Return JSON:
+- seniority: the level the posting targets — one of intern, junior, mid, senior, staff, principal, lead, manager, director, vp, or "" if the posting does not say
+- years_required: integer years of experience the posting requires of the candidate, or null. Only count a number stated as a requirement *of the applicant* — ignore years mentioned about the company, the product, or the team.
+- requirements: a list of at most {{ max_requirements }} items, each:
+  - text: the requirement, as one short self-contained sentence taken from the posting
+  - kind: "must" for stated requirements, "nice" for anything the posting frames as preferred, bonus, a plus, or nice to have
+  - category: "skill" (a technology, language or tool), "experience" (amount or type of past work), "responsibility" (what the role does), "education" (degree or certification), or "other"
+  - terms: the concrete technologies or keywords named in that requirement, lowercase, [] if none
+
+Rules:
+- One requirement per item. Split compound bullets ("Python and Kubernetes") into separate items.
+- Skip benefits, perks, salary, company description, EEO and application instructions.
+- Keep the posting's own wording. Do not soften or strengthen it.

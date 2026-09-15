@@ -1,0 +1,73 @@
+<form hx-post="/settings/save/auto_apply" hx-swap="none" class="space-y-4 max-w-lg" id="auto-apply-form">
+  <label class="flex items-center gap-2 text-sm">
+    <input type="checkbox" name="enabled" value="true" {% if auto_apply.enabled %}checked{% endif %} class="rounded">
+    Enable auto-apply on approve
+  </label>
+  <div>
+    <label class="block text-sm font-medium mb-1">Max applications per day</label>
+    <input type="number" name="max_per_day" value="{{ auto_apply.max_per_day }}" min="1" max="50" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+  </div>
+  <label class="flex items-center gap-2 text-sm">
+    <input type="checkbox" name="headless" value="true" {% if auto_apply.headless %}checked{% endif %} class="rounded">
+    Headless browser (uncheck to show the browser during apply)
+  </label>
+  <div>
+    <p class="text-sm font-medium mb-2">Allowed adapters</p>
+    {% for adapter in ['greenhouse', 'lever', 'email', 'generic'] %}
+    <label class="flex items-center gap-2 text-sm mb-1">
+      <input type="checkbox" name="allowlist" value="{{ adapter }}" {% if adapter in auto_apply.allowlist %}checked{% endif %} class="rounded">
+      {{ adapter }}
+    </label>
+    {% endfor %}
+  </div>
+
+  <div class="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-3">
+    <p class="text-sm font-medium text-slate-900 dark:text-slate-100">Email verification (IMAP)</p>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="otp_auto_fetch" value="true" {% if auto_apply.otp_auto_fetch %}checked{% endif %} class="rounded">
+      Auto-fetch verification codes from email
+    </label>
+    <div>
+      <label class="block text-sm font-medium mb-1">IMAP host</label>
+      <input name="imap_host" value="{{ auto_apply.otp_imap.host }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">IMAP port</label>
+      <input type="number" name="imap_port" value="{{ auto_apply.otp_imap.port }}" min="1" max="65535" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">IMAP username</label>
+      <input name="imap_username" value="{{ auto_apply.otp_imap.username }}" placeholder="Defaults to applicant email" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    </div>
+    <div>
+      <label class="block text-sm font-medium mb-1">IMAP password</label>
+      <input type="password" name="imap_password" autocomplete="off"
+        placeholder="{% if auto_apply.has_imap_password %}{{ auto_apply.imap_password_hint }}{% else %}App password{% endif %}"
+        class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+      {% if auto_apply.has_imap_password %}
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Leave blank to keep existing password.</p>
+      {% endif %}
+    </div>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="imap_use_tls" value="true" {% if auto_apply.otp_imap.use_tls %}checked{% endif %} class="rounded">
+      Use TLS (SSL)
+    </label>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-sm font-medium mb-1">Poll timeout (sec)</label>
+        <input type="number" name="imap_poll_timeout_sec" value="{{ auto_apply.otp_imap.poll_timeout_sec }}" min="10" max="300" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Poll interval (sec)</label>
+        <input type="number" name="imap_poll_interval_sec" value="{{ auto_apply.otp_imap.poll_interval_sec }}" min="2" max="60" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+      </div>
+    </div>
+    <p class="text-xs text-slate-500 dark:text-slate-400">
+      Gmail: enable 2FA, then create an <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" class="text-brand hover:underline">App Password</a>. Use host <code class="text-xs">imap.gmail.com</code> and port <code class="text-xs">993</code>.
+    </p>
+    <button type="button" hx-post="/settings/test-imap" hx-include="#auto-apply-form" hx-target="#imap-test-result" class="px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">Test inbox connection</button>
+    <div id="imap-test-result"></div>
+  </div>
+
+  <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm">Save</button>
+</form>

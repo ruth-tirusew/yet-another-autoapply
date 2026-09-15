@@ -1,0 +1,78 @@
+Build a personalized profile improvement guide for this candidate.
+
+## Candidate overview
+- Name: {{ name or "Unknown" }}
+- Headline: {{ label or "Not set" }}
+{% if summary_snippet %}
+- Summary excerpt: {{ summary_snippet }}
+{% endif %}
+
+## Candidate projects (CV + GitHub)
+{% if user_projects %}
+{% for p in user_projects %}
+- [{{ p.source }}] {{ p.name }} — {{ p.description[:150] }}{% if p.url %} — {{ p.url }}{% endif %}{% if p.technologies %} — tech: {{ p.technologies|join(', ') }}{% endif %}{% if p.project_type %} ({{ p.project_type }}){% endif %}
+{% endfor %}
+{% else %}
+- No projects listed on CV or GitHub
+{% endif %}
+
+## Technical stack
+{% if stack %}
+{% for s in stack %}
+- {{ s }}
+{% endfor %}
+{% else %}
+- No skills extracted from CV/GitHub
+{% endif %}
+
+## CV snapshot
+- Work entries: {{ work_count }}
+- Projects listed: {{ project_count }}
+- Projects with links/URLs: {{ projects_with_url }}
+
+## GitHub snapshot
+{% if github_username %}
+- Username: {{ github_username }}
+- Repos analyzed: {{ github_repo_count }}
+- Self-owned vs contributed ratio: {{ github_self_owned_ratio }}
+{% else %}
+- No GitHub profile linked or fetched
+{% endif %}
+
+## Profile evaluation (weak areas below 50%)
+{% if evaluation_categories %}
+{% for cat in evaluation_categories %}
+- {{ cat.label }}: {{ cat.score }}/{{ cat.max }} ({{ cat.pct }}%) — {{ cat.evidence[:200] }}
+{% endfor %}
+{% else %}
+- No evaluation data or all categories above 50%
+{% endif %}
+
+{% if areas_for_improvement %}
+## Areas for improvement (from evaluator)
+{% for a in areas_for_improvement %}
+- {{ a }}
+{% endfor %}
+{% endif %}
+
+{% if key_strengths %}
+## Key strengths
+{% for s in key_strengths %}
+- {{ s }}
+{% endfor %}
+{% endif %}
+
+{% if top_gaps %}
+## Recurring skill gaps from job matches
+{% for g in top_gaps %}
+- {{ g }}
+{% endfor %}
+{% endif %}
+
+Return JSON with:
+- summary: 2-3 sentence overview of the biggest profile wins they should focus on
+- cv_tips: 4-6 objects with title and detail (resume/CV improvements tied to their data)
+- github_tips: 4-6 objects with title and detail (GitHub profile and activity improvements)
+- oss_projects: 4-6 objects with name, url (https://github.com/org/repo), related_project, why, first_step
+
+Prioritize tips for categories scoring lowest. Each oss_projects entry must reference a specific candidate project in related_project and explain how contributing to the suggested OSS project relates to that project.

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Profile — Job Crawler{% endblock %}
+{% block content %}
+<h2 class="text-2xl font-bold mb-6 text-slate-900 dark:text-slate-100">Profile</h2>
+
+{% if show_onboarding %}
+<div class="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 dark:bg-blue-950/30 dark:border-blue-900">
+  <p class="text-sm text-blue-900 dark:text-blue-200 font-medium">Welcome! Upload your CV to get started.</p>
+  <p class="text-sm text-blue-800 dark:text-blue-300 mt-1">The pipeline uses your resume to match and tailor applications.</p>
+</div>
+{% endif %}
+
+<div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
+  <h3 class="font-semibold mb-2 text-slate-900 dark:text-slate-100">Upload CV</h3>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Uses hiring_agent for section extraction, GitHub enrichment, and profile evaluation. This may take a few minutes.</p>
+  {% if uploading %}
+  {% include "partials/profile_upload_status.html" %}
+  {% else %}
+  <form method="post" action="/profile/upload" enctype="multipart/form-data" class="flex items-center gap-3">
+    <input type="file" name="file" accept=".pdf" class="text-sm text-slate-700 dark:text-slate-300">
+    <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90">Upload PDF</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if profile %}
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
+  <h3 class="font-semibold mb-3 text-slate-900 dark:text-slate-100">Current profile</h3>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">Updated: {{ profile.updated_at or '—' }}</p>
+  {% set basics = profile.resume_json.get('basics') or {} %}
+  <p class="font-medium text-slate-900 dark:text-slate-100">{{ basics.get('name', '') }}</p>
+  <p class="text-sm text-slate-600 dark:text-slate-400">{{ basics.get('label', '') }}</p>
+  <p class="text-sm text-slate-600 dark:text-slate-400">{{ basics.get('email', '') }}</p>
+  {% if basics.get('summary') %}
+  <p class="text-sm mt-3 text-slate-700 dark:text-slate-300">{{ basics.summary[:500] }}{% if basics.summary|length > 500 %}…{% endif %}</p>
+  {% endif %}
+  <p class="text-sm mt-3 text-slate-500 dark:text-slate-400">
+    {{ (profile.resume_json.get('work') or [])|length }} work ·
+    {{ (profile.resume_json.get('projects') or [])|length }} projects ·
+    {{ (profile.resume_json.get('skills') or [])|length }} skill groups ·
+    GitHub {% if profile_summary.github_loaded %}<span class="text-green-700 dark:text-green-400 font-medium">linked</span>{% else %}<span class="text-slate-400">not loaded</span>{% endif %}
+  </p>
+  <p class="mt-3"><a href="/templates" class="text-sm text-brand hover:underline">Customize CV appearance → Templates</a></p>
+</div>
+
+{% if profile_summary.evaluated %}
+<div class="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+  <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
+    <div>
+      <h3 class="font-semibold text-slate-900 dark:text-slate-100">Hiring-agent evaluation</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Used by job match and cover letter generation</p>
+    </div>
+    <div class="text-center">
+      <div class="w-16 h-16 rounded-full border-4 border-brand flex items-center justify-center">
+        <span class="text-lg font-bold text-brand">{{ profile_summary.score }}</span>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">/ 100</p>
+    </div>
+  </div>
+
+  {% set categories = profile_summary.categories %}
+  {% set show_evidence = true %}
+  {% include "partials/eval_bars.html" %}
+
+  {% if profile_summary.strengths %}
+  <div class="mt-6">
+    <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">Key strengths</h4>
+    <ul class="text-sm text-slate-700 dark:text-slate-300 list-disc pl-4 space-y-1">
+      {% for s in profile_summary.strengths[:5] %}<li>{{ s }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if profile_summary.improvements %}
+  <div class="mt-4">
+    <h4 class="text-sm font-medium text-amber-800 dark:text-amber-400 mb-2">Areas for improvement</h4>
+    <ul class="text-sm text-slate-700 dark:text-slate-300 list-disc pl-4 space-y-1">
+      {% for g in profile_summary.improvements[:5] %}<li>{{ g }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" action="/profile/evaluate" class="mt-6">
+    <button type="submit" class="text-sm text-brand font-medium hover:underline">Re-run evaluation</button>
+  </form>
+</div>
+{% else %}
+<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-xl p-5">
+  <p class="text-sm text-amber-900 dark:text-amber-300 font-medium mb-2">Evaluation not run yet</p>
+  <p class="text-sm text-amber-800 dark:text-amber-400 mb-4">Run hiring_agent evaluation to improve match and cover letter quality.</p>
+  <form method="post" action="/profile/evaluate">
+    <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90">Run evaluation</button>
+  </form>
+</div>
+{% endif %}
+
+{% else %}
+<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl p-4 text-sm text-amber-800 dark:text-amber-300">
+  No profile loaded. Upload a PDF CV to enable matching and tailoring.
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,4 @@
+{% if resume.skills %}
+<h2>{{ section_title or 'Skills' }}</h2>
+<p>{% for s in resume.skills %}{{ s.name or '' }}{% if s.keywords %} ({{ s.keywords|join(', ') }}){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}</p>
+{% endif %}

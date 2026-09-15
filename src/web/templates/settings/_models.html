@@ -1,0 +1,91 @@
+<form hx-post="/settings/save/models" hx-swap="none" class="space-y-4 max-w-lg" id="models-form">
+  <div>
+    <label class="block text-sm font-medium mb-1">LLM provider</label>
+    <div class="flex flex-wrap gap-4">
+      <label class="inline-flex items-center gap-2 text-sm">
+        <input type="radio" name="provider" value="ollama" {% if models.provider == 'ollama' %}checked{% endif %} class="rounded border-slate-300">
+        Local (Ollama)
+      </label>
+      <label class="inline-flex items-center gap-2 text-sm">
+        <input type="radio" name="provider" value="groq" {% if models.provider == 'groq' %}checked{% endif %} class="rounded border-slate-300">
+        Groq
+      </label>
+      <label class="inline-flex items-center gap-2 text-sm">
+        <input type="radio" name="provider" value="gemini" {% if models.provider == 'gemini' %}checked{% endif %} class="rounded border-slate-300">
+        Gemini
+      </label>
+    </div>
+  </div>
+
+  <div id="ollama-fields" class="{% if models.provider != 'ollama' %}hidden{% endif %}">
+    <label class="block text-sm font-medium mb-1">Ollama host</label>
+    <input name="ollama_host" value="{{ models.ollama_host }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+  </div>
+
+  <div id="api-key-fields" class="{% if models.provider == 'ollama' %}hidden{% endif %}">
+    <label class="block text-sm font-medium mb-1">API key</label>
+    <input type="password" name="api_key" autocomplete="off"
+      placeholder="{% if models.has_api_key %}{{ models.api_key_hint }}{% else %}Enter API key{% endif %}"
+      class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    {% if models.has_api_key %}
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Leave blank to keep existing key.</p>
+    {% endif %}
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium mb-1">Default model</label>
+    <select name="default_model" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+      {% for m in available_models %}
+      <option value="{{ m }}" {% if m == models.default_model %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+      {% if models.default_model not in available_models %}
+      <option value="{{ models.default_model }}" selected>{{ models.default_model }}</option>
+      {% endif %}
+    </select>
+  </div>
+  <div>
+    <label class="block text-sm font-medium mb-1">Quality model</label>
+    <select name="quality_model" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+      {% for m in available_models %}
+      <option value="{{ m }}" {% if m == models.quality_model %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+      {% if models.quality_model not in available_models %}
+      <option value="{{ models.quality_model }}" selected>{{ models.quality_model }}</option>
+      {% endif %}
+    </select>
+  </div>
+  <div id="embedding-model-field" class="{% if models.provider != 'ollama' %}hidden{% endif %}">
+    <label class="block text-sm font-medium mb-1">Embedding model</label>
+    <select name="embedding_model" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+      {% for m in available_models %}
+      <option value="{{ m }}" {% if m == models.embedding_model %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+      {% if models.embedding_model not in available_models %}
+      <option value="{{ models.embedding_model }}" selected>{{ models.embedding_model }}</option>
+      {% endif %}
+    </select>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Vector prefilter model. After changing, run <code class="text-xs">python cli.py embeddings reset</code> and re-embed.</p>
+  </div>
+  <div class="flex gap-2">
+    <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm">Save</button>
+    <button type="button" hx-post="/settings/test-model" hx-include="closest form" hx-target="#model-test-result" class="px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">Test connection</button>
+  </div>
+  <div id="model-test-result"></div>
+</form>
+<script>
+  (function () {
+    const form = document.getElementById('models-form');
+    if (!form) return;
+    const ollamaFields = document.getElementById('ollama-fields');
+    const apiKeyFields = document.getElementById('api-key-fields');
+    const embeddingField = document.getElementById('embedding-model-field');
+    function sync() {
+      const provider = form.querySelector('input[name="provider"]:checked')?.value || 'ollama';
+      ollamaFields.classList.toggle('hidden', provider !== 'ollama');
+      apiKeyFields.classList.toggle('hidden', provider === 'ollama');
+      if (embeddingField) embeddingField.classList.toggle('hidden', provider !== 'ollama');
+    }
+    form.querySelectorAll('input[name="provider"]').forEach((el) => el.addEventListener('change', sync));
+    sync();
+  })();
+</script>

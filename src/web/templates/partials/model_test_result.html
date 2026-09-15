@@ -1,0 +1,5 @@
+{% if result.ok %}
+<p class="text-sm text-green-700 dark:text-green-400 mt-2">✓ {{ result.model }} responded in {{ result.latency_ms }}ms: {{ result.sample_response[:80] }}</p>
+{% else %}
+<p class="text-sm text-red-600 dark:text-red-400 mt-2">✗ {{ result.error }}</p>
+{% endif %}

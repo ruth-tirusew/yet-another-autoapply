@@ -1,0 +1,6 @@
+{% if resume.education %}
+<h2>{{ section_title or 'Education' }}</h2>
+{% for e in resume.education %}
+<p><strong>{{ e.institution or '' }}</strong>{% if e.studyType or e.area %} — {{ e.studyType or '' }} {{ e.area or '' }}{% endif %}</p>
+{% endfor %}
+{% endif %}

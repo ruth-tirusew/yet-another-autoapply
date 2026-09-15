@@ -1,0 +1,39 @@
+<form hx-post="/settings/save/keywords" hx-swap="none" class="space-y-6 max-w-2xl">
+  <p class="text-sm text-slate-600 dark:text-slate-400">
+    Jobs must match at least one term from a <strong>primary group</strong>. Other groups feed integrations and optional filters.
+  </p>
+
+  <fieldset class="space-y-2">
+    <legend class="text-sm font-semibold text-slate-900 dark:text-slate-100">Primary groups</legend>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">At least one keyword from any selected group must appear in the job.</p>
+    <div class="flex flex-wrap gap-3">
+      {% set groups = ['stack', 'roles', 'frameworks', 'environment', 'contract_type', 'seniority', 'industry'] %}
+      {% set primary = keywords.primary_groups or ['stack', 'roles'] %}
+      {% for g in groups %}
+      <label class="flex items-center gap-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+        <input type="checkbox" name="primary_groups" value="{{ g }}" {% if g in primary %}checked{% endif %} class="rounded">
+        {{ g|replace('_', ' ')|title }}
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <fieldset class="space-y-4">
+    <legend class="text-sm font-semibold text-slate-900 dark:text-slate-100">Include keywords</legend>
+    {% set include = keywords.include or {} %}
+    {% for g in groups %}
+    <div>
+      <label class="block text-sm font-medium mb-1 capitalize">{{ g|replace('_', ' ') }}</label>
+      <textarea name="include_{{ g }}" rows="2" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm" placeholder="comma-separated">{{ (include.get(g) or [])|join(', ') }}</textarea>
+    </div>
+    {% endfor %}
+  </fieldset>
+
+  <div>
+    <label class="block text-sm font-medium mb-1">Exclude keywords</label>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">Jobs matching any exclude term are filtered out.</p>
+    <textarea name="exclude" rows="2" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm" placeholder="unpaid, volunteer">{{ (keywords.exclude or [])|join(', ') }}</textarea>
+  </div>
+
+  <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm">Save</button>
+</form>

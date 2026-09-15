@@ -1,0 +1,62 @@
+<form hx-post="/settings/save/account" hx-swap="none" class="space-y-4 max-w-lg">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div>
+    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Display name</label>
+    <input type="text" name="display_name" value="{{ current_user.display_name or '' }}"
+      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+  </div>
+  <div>
+    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+    <input type="email" value="{{ current_user.email }}" disabled
+      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 text-sm">
+  </div>
+
+  <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+    <p class="text-sm font-medium text-slate-900 dark:text-slate-100 mb-3">
+      {% if current_user.password_hash %}Change password{% else %}Set password{% endif %}
+    </p>
+    {% if current_user.password_hash %}
+    <div class="mb-3">
+      <label class="block text-sm text-slate-600 dark:text-slate-400 mb-1">Current password</label>
+      <input type="password" name="current_password" autocomplete="current-password"
+        class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+    </div>
+    {% endif %}
+    <div>
+      <label class="block text-sm text-slate-600 dark:text-slate-400 mb-1">New password</label>
+      <input type="password" name="new_password" autocomplete="new-password" minlength="8"
+        class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+    </div>
+  </div>
+
+  {% if oauth_accounts %}
+  <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+    <p class="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">Linked accounts</p>
+    <ul class="space-y-2">
+      {% for acct in oauth_accounts %}
+      <li class="flex items-center justify-between text-sm">
+        <span class="capitalize text-slate-700 dark:text-slate-300">{{ acct.provider }}</span>
+        <form hx-post="/settings/unlink-oauth" hx-swap="none" class="inline">
+          <input type="hidden" name="provider" value="{{ acct.provider }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="text-red-600 hover:underline text-xs">Unlink</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="flex gap-2 pt-2">
+    {% if github_enabled and not oauth_providers.github %}
+    <a href="/auth/github" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Link GitHub</a>
+    {% endif %}
+    {% if google_enabled and not oauth_providers.google %}
+    <a href="/auth/google" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Link Google</a>
+    {% endif %}
+  </div>
+
+  <button type="submit" class="px-4 py-2 rounded-lg bg-brand text-white text-sm font-medium hover:bg-blue-700">
+    Save account
+  </button>
+</form>

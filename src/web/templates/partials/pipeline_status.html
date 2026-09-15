@@ -1,0 +1,58 @@
+<div id="pipeline-status" {% if state.running %}hx-get="/partials/pipeline-status" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+  {% if state.idle and not state.last_run %}
+  <div class="text-sm text-slate-500 dark:text-slate-400">No pipeline run yet. Use the stages above to start.</div>
+  {% elif state.idle and state.last_run %}
+  <div class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+    Last run <span class="font-medium">{{ state.last_run.id }}</span>
+    {% if state.last_run.finished_at %}· {{ state.last_run.finished_at[:16] }}{% endif %}
+    {% if state.last_run.error %}<span class="text-red-600">· Error</span>{% else %}<span class="text-green-600">· Done</span>{% endif %}
+  </div>
+  {% if state.last_run.summary %}
+  <div class="flex flex-wrap gap-2 mb-3">
+    {% for stage, data in state.last_run.summary.items() %}
+    <span class="px-2 py-1 text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+      {{ stage_label(stage) }}: {{ data.message or data.processed or 'ok' }}
+    </span>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if state.last_run.summary.match and state.last_run.summary.match.queued %}
+  <a href="{{ applications_url('queued') }}" class="inline-block text-sm text-brand hover:underline mb-3">
+    {{ state.last_run.summary.match.queued }} jobs ready for review →
+  </a>
+  {% endif %}
+  {% elif not state.idle %}
+  <div class="flex items-center gap-3 mb-3">
+    <span class="text-sm font-medium text-slate-900 dark:text-slate-100">Run {{ state.id }}</span>
+    {% if state.running %}
+    <span class="{{ status_badge_classes('running') }}">Running: {{ stage_label(state.stage) }}</span>
+    {% elif state.error %}
+    <span class="{{ status_badge_classes('failed') }}">Error</span>
+    {% else %}
+    <span class="{{ status_badge_classes('applied') }}">Done</span>
+    {% endif %}
+  </div>
+  {% if state.summary %}
+  <div class="flex flex-wrap gap-2 mb-3">
+    {% for stage, data in state.summary.items() %}
+    <span class="px-2 py-1 text-xs rounded-lg bg-slate-100 dark:bg-slate-800">{{ stage_label(stage) }}: {{ data.message or 'ok' }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if state.error %}
+  <p class="text-sm text-red-600 dark:text-red-400 mb-2">{{ state.error }}</p>
+  {% endif %}
+  {% if state.done and state.summary.match and state.summary.match.queued %}
+  <a href="{{ applications_url('queued') }}" class="inline-block text-sm text-brand hover:underline mb-3">
+    Review {{ state.summary.match.queued }} queued jobs →
+  </a>
+  {% endif %}
+  {% endif %}
+
+  <details class="mt-2">
+    <summary class="text-xs text-slate-500 cursor-pointer">Technical log</summary>
+    <pre class="text-xs bg-slate-900 text-green-400 p-3 rounded-lg max-h-48 overflow-y-auto font-mono mt-2">{% for line in state.log %}{{ line }}
+{% endfor %}{% if state.last_run and state.last_run.log %}{% for line in state.last_run.log %}{{ line }}
+{% endfor %}{% endif %}</pre>
+  </details>
+</div>

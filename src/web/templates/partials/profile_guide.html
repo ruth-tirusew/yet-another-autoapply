@@ -1,0 +1,118 @@
+{% if not profile_loaded %}
+<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-xl p-4 text-sm text-amber-800 dark:text-amber-300">
+  Upload your CV on <a href="/profile" class="underline font-medium">Profile</a> to get a personalized improvement guide.
+</div>
+{% elif guide %}
+{% if guide_stale %}
+<p class="text-sm text-amber-700 dark:text-amber-400 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-lg px-3 py-2">
+  Your profile or skill gaps changed since this guide was generated.
+  <button
+    type="button"
+    hx-post="/coaching/profile-guide/generate?force=1"
+    hx-target="#profile-guide-panel"
+    hx-swap="innerHTML"
+    class="ml-1 font-medium underline htmx-request:opacity-50">
+    Refresh guide
+  </button>
+</p>
+{% endif %}
+
+{% if guide.summary %}
+<p class="text-sm text-slate-700 dark:text-slate-300 mb-6">{{ guide.summary }}</p>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+    <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-4">Improve your CV</h3>
+    {% if guide.cv_tips %}
+    <ol class="space-y-4 text-sm">
+      {% for tip in guide.cv_tips %}
+      <li>
+        <p class="font-medium text-slate-900 dark:text-slate-100">{{ loop.index }}. {{ tip.title }}</p>
+        <p class="text-slate-600 dark:text-slate-400 mt-1">{{ tip.detail }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="text-sm text-slate-500 dark:text-slate-400">No CV tips in this guide.</p>
+    {% endif %}
+  </div>
+
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+    <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-4">Improve your GitHub</h3>
+    {% if guide.github_tips %}
+    <ol class="space-y-4 text-sm">
+      {% for tip in guide.github_tips %}
+      <li>
+        <p class="font-medium text-slate-900 dark:text-slate-100">{{ loop.index }}. {{ tip.title }}</p>
+        <p class="text-slate-600 dark:text-slate-400 mt-1">{{ tip.detail }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="text-sm text-slate-500 dark:text-slate-400">No GitHub tips in this guide.</p>
+    {% endif %}
+  </div>
+
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+    <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-4">Open source to explore</h3>
+    {% if guide.oss_projects %}
+    <ul class="space-y-4 text-sm">
+      {% for proj in guide.oss_projects %}
+      <li class="border-b border-slate-100 dark:border-slate-800 pb-4 last:border-0 last:pb-0">
+        <a href="{{ proj.url }}" target="_blank" rel="noopener noreferrer" class="font-medium text-brand hover:underline">{{ proj.name }}</a>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          {% if proj.related_project and proj.related_project != 'general' %}
+          Based on your project: {{ proj.related_project }}
+          {% else %}
+          General recommendation
+          {% endif %}
+        </p>
+        <p class="text-slate-600 dark:text-slate-400 mt-1">{{ proj.why }}</p>
+        <p class="text-slate-700 dark:text-slate-300 mt-2"><span class="font-medium">First step:</span> {{ proj.first_step }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-sm text-slate-500 dark:text-slate-400">No OSS suggestions in this guide.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if guide.cv_tips %}
+<div id="cv-preview-panel">
+  {% include "partials/cv_preview_panel.html" %}
+</div>
+{% endif %}
+
+{% if guide_generated_at %}
+<p class="text-xs text-slate-400 mt-4">
+  Generated {{ guide_generated_at[:19].replace('T', ' ') }} UTC
+  ·
+  <button
+    type="button"
+    hx-post="/coaching/profile-guide/generate?force=1"
+    hx-target="#profile-guide-panel"
+    hx-swap="innerHTML"
+    class="text-brand hover:underline htmx-request:opacity-50">
+    Refresh guide
+  </button>
+</p>
+{% endif %}
+
+{% else %}
+<div class="text-center py-8">
+  <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+    Generate a personalized guide for your CV, GitHub profile, and open source contributions.
+  </p>
+  <button
+    type="button"
+    hx-post="/coaching/profile-guide/generate"
+    hx-target="#profile-guide-panel"
+    hx-swap="innerHTML"
+    class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90 htmx-request:opacity-50">
+    Generate profile guide
+    <span class="htmx-indicator ml-2 text-xs">Generating…</span>
+  </button>
+</div>
+{% endif %}

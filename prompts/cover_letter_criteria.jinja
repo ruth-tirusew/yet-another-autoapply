@@ -1,0 +1,31 @@
+Write a cover letter for this application.
+
+## ATS match analysis (use this — do not contradict it)
+Match score: {{ match_score or 'unknown' }}
+{{ ats_context }}
+
+{% if profile_evaluation %}
+## Profile evaluation (hiring_agent)
+{{ profile_evaluation }}
+{% endif %}
+
+## Candidate
+Name: {{ name }}
+Summary: {{ summary }}
+
+## Relevant experience
+{{ experience_text }}
+
+## Job
+Title: {{ job_title }}
+Company: {{ job_company }}
+
+{{ job_description }}
+
+Max {{ max_words }} words. Tone: {{ tone }}.
+
+Emphasize job-relevant ATS strengths only. Do not invent experience to cover ATS gaps.
+Lead with strengths that match "{{ job_title }}" — not Sharia/Islamic finance/Murabaha unless the posting explicitly mentions that domain.
+Fineract and lending-platform work may be described as backend engineering experience.
+The opening must reference "{{ job_title }}" at {{ job_company }} — not a recycled hook from another application.
+Return plain text cover letter only, no JSON.

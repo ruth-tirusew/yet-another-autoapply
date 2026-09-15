@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% from "partials/ui_macros.html" import score_block, pipeline_health_bar %}
+{% block title %}Dashboard — Job Crawler{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h2>
+  <div class="flex flex-wrap gap-2">
+    {% if readiness.jobs_new > 0 %}
+    <form hx-post="/jobs/score" hx-target="#dash-pipeline-log" hx-swap="innerHTML">
+      <button type="submit" class="px-4 py-2 border border-brand text-brand rounded-lg text-sm font-medium hover:bg-brand/5 {% if pipeline_busy %}opacity-50{% endif %}" {% if pipeline_busy %}disabled{% endif %}>
+        Score new jobs
+      </button>
+    </form>
+    {% endif %}
+    <form hx-post="/pipeline/run" hx-target="#dash-pipeline-log" hx-swap="innerHTML">
+    <input type="hidden" name="stages" value="crawl,enrich,embed,sync,prefilter,match,generate,export">
+    <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90 shadow-sm transition-opacity {% if pipeline_busy %}opacity-50{% endif %}" {% if pipeline_busy %}disabled{% endif %}>
+      Run Full Pipeline
+    </button>
+    </form>
+  </div>
+</div>
+
+{% include "partials/onboarding_checklist.html" %}
+
+{% include "partials/failed_applications_banner.html" %}
+
+{% set matched = readiness.jobs_scored + readiness.jobs_queued + readiness.jobs_approved %}
+{% set total_jobs = readiness.status_counts.values()|sum %}
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Profile</p>
+    <div id="profile-eval-badge" hx-get="/partials/profile-eval-status" hx-trigger="load" class="mt-1">
+      {% include "partials/profile_eval_status.html" %}
+    </div>
+  </div>
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">New Jobs</p>
+    <p class="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{{ readiness.jobs_new }}</p>
+  </div>
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Matches</p>
+    <p class="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">{{ matched }}</p>
+  </div>
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Applied</p>
+    <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{{ readiness.jobs_applied }}</p>
+    <p class="text-xs text-slate-400 mt-0.5">{{ applied_today }}/{{ cfg.max_applications_per_day }} today</p>
+  </div>
+</div>
+
+{% include "partials/failed_applications_list.html" %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+  <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+    {{ pipeline_health_bar(health) }}
+    {% if not profile_summary.loaded %}
+    <p class="mt-3 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-lg px-3 py-2">
+      Upload a CV on <a href="/profile" class="font-medium underline">Profile</a> before matching.
+    </p>
+    {% elif not profile_summary.evaluated %}
+    <p class="mt-3 text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-lg px-3 py-2">
+      Profile loaded but not evaluated — <a href="/profile" class="font-medium underline">run evaluation</a> for better matches.
+    </p>
+    {% endif %}
+    <div id="dash-pipeline-log" class="mt-4" hx-get="/partials/pipeline-status" hx-trigger="load, every 3s" hx-swap="innerHTML">
+      {% include "partials/pipeline_status.html" %}
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+    <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-3">Recent Activity</h3>
+    <ul class="space-y-2 text-sm">
+      {% for item in activity %}
+      <li class="flex items-start gap-2
+        {% if item.kind == 'success' %}text-green-700 dark:text-green-400
+        {% elif item.kind == 'warning' %}text-amber-700 dark:text-amber-400
+        {% elif item.kind == 'error' %}text-red-700 dark:text-red-400
+        {% else %}text-slate-600 dark:text-slate-400{% endif %}">
+        {% if item.kind == 'success' %}
+        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        {% elif item.kind == 'warning' %}
+        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        {% else %}
+        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        {% endif %}
+        {{ item.text }}
+      </li>
+      {% else %}
+      <li class="text-slate-500 dark:text-slate-400">No activity yet. Run the pipeline to get started.</li>
+      {% endfor %}
+    </ul>
+    <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Auto-apply</p>
+      <p class="text-sm font-semibold {% if cfg.auto_apply %}text-green-600 dark:text-green-400{% else %}text-slate-500{% endif %}">{{ 'ON' if cfg.auto_apply else 'OFF' }}</p>
+      <div id="model-status-badge" class="mt-2" hx-get="/partials/model-status" hx-trigger="load">
+        <span class="text-xs text-slate-400">Checking models…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if readiness.status_counts %}
+<div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 mb-4">
+  <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-3">Jobs by status</h3>
+  <div class="flex flex-wrap gap-2">
+    {% for status, count in readiness.status_counts.items() %}
+    <a href="{{ applications_url(status) }}" class="{{ status_count_classes(status) }}">
+      {{ status }} <span class="opacity-75">{{ count }}</span>
+    </a>
+    {% endfor %}
+    {% if failed_count > 0 %}
+    <form method="post" action="/applications/retry-failed" class="inline">
+      <input type="hidden" name="tab" value="history">
+      <input type="hidden" name="status" value="failed">
+      <button type="submit" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700">Retry all failed</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="font-semibold text-slate-900 dark:text-slate-100">Review Queue</h3>
+    <a href="{{ applications_url('queued') }}" class="text-sm text-brand hover:underline">View all</a>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    {% for j in review_jobs %}
+    {% set tier = score_tier(j.match_score) %}
+    <div class="rounded-xl border border-slate-100 dark:border-slate-800 p-4 hover:shadow-md hover:border-brand/30 transition-all">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="font-medium text-slate-900 dark:text-slate-100 truncate">{{ j.title or 'Untitled' }}</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400">{{ j.company or '' }}</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-lg font-bold {{ tier.text_class }}">{{ j.match_score|int if j.match_score is not none else '—' }}</p>
+          <p class="text-xs {{ tier.text_class }}">{{ tier.label }}</p>
+        </div>
+      </div>
+      {% if j.match_strengths or j.match_gaps %}
+      <div class="mt-3 space-y-1 text-xs">
+        {% for s in j.match_strengths %}
+        <p class="text-green-700 dark:text-green-400 flex items-center gap-1">
+          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          {{ s[:50] }}{% if s|length > 50 %}…{% endif %}
+        </p>
+        {% endfor %}
+        {% for g in j.match_gaps %}
+        <p class="text-amber-700 dark:text-amber-400 flex items-center gap-1">
+          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"/></svg>
+          {{ g[:50] }}{% if g|length > 50 %}…{% endif %}
+        </p>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <a href="/job/{{ j.id }}" class="mt-3 inline-block px-3 py-1.5 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90">Review</a>
+    </div>
+    {% else %}
+    <p class="text-sm text-slate-500 dark:text-slate-400 col-span-2 py-6 text-center">No jobs in review queue. Run match stage to populate.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

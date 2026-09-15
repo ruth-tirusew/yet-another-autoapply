@@ -1,0 +1,16 @@
+data/
+.env
+*.pyc
+__pycache__/
+.venv/
+cache/
+.pytest_cache/
+
+# Legacy config artifacts (contain personal info, superseded by DB-backed config)
+config.yaml.bak
+config.yaml.imported
+config/*.imported
+
+# Generated pipeline output
+jobs_results.xlsx
+*.xlsx

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;line-height:1.5;color:#1e293b;background:#fff}
+h1{margin-bottom:0;color:#0f172a}h2{border-bottom:1px solid #ccc;margin-top:24px;color:#0f172a}
+h3{color:#0f172a}
+ul{margin:4px 0;padding-left:20px}.meta{color:#475569;font-size:14px}
+p,li{color:#1e293b}
+@media print{
+  body{color:#000;background:#fff}
+  h1,h2,h3,p,li{color:#000}
+  .meta{color:#333}
+}
+</style></head><body>
+{% set b = resume.basics or {} %}
+<h1>{{ b.name or 'Candidate' }}</h1>
+<p class="meta">{{ b.email or '' }} | {{ b.phone or '' }}{% if b.url %} | {{ b.url }}{% endif %}</p>
+{% if b.profiles %}
+<p class="meta">{% for p in b.profiles %}{{ p.network or '' }}: {{ p.url or '' }}{% if not loop.last %} | {% endif %}{% endfor %}</p>
+{% endif %}
+{% if b.summary %}<p>{{ b.summary }}</p>{% endif %}
+{% if resume.work %}
+<h2>Experience</h2>
+{% for w in resume.work %}
+<h3>{{ w.position or '' }}{% if w.name %} — {{ w.name }}{% endif %}</h3>
+<p class="meta">{{ w.startDate or '' }}{% if w.startDate or w.endDate %} – {% endif %}{{ w.endDate or 'Present' }}</p>
+{% if w.summary %}<p>{{ w.summary }}</p>{% endif %}
+{% if w.highlights %}<ul>{% for h in w.highlights %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}
+{% endfor %}
+{% elif resume.projects %}
+<h2>Experience</h2>
+{% for p in resume.projects %}
+<h3>{{ p.name or 'Project' }}</h3>
+{% if p.startDate or p.endDate %}<p class="meta">{{ p.startDate or '' }}{% if p.startDate or p.endDate %} – {% endif %}{{ p.endDate or 'Present' }}</p>{% endif %}
+{% if p.description %}<p>{{ p.description }}</p>{% endif %}
+{% if p.highlights %}<ul>{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}
+{% if p.technologies %}<p class="meta">{{ p.technologies|join(', ') }}</p>{% endif %}
+{% endfor %}
+{% endif %}
+{% if resume.education %}
+<h2>Education</h2>
+{% for e in resume.education %}
+<p><strong>{{ e.institution or '' }}</strong>{% if e.studyType or e.area %} — {{ e.studyType or '' }} {{ e.area or '' }}{% endif %}</p>
+{% endfor %}
+{% endif %}
+{% if resume.skills %}
+<h2>Skills</h2>
+<p>{% for s in resume.skills %}{{ s.name or '' }}{% if s.keywords %} ({{ s.keywords|join(', ') }}){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}</p>
+{% endif %}
+</body></html>

@@ -1,0 +1,10 @@
+{% if resume.projects and resume.work %}
+<h2>{{ section_title or 'Projects' }}</h2>
+{% for p in resume.projects %}
+<h3>{{ p.name or 'Project' }}</h3>
+{% if p.startDate or p.endDate %}<p class="meta">{{ p.startDate or '' }}{% if p.startDate or p.endDate %} – {% endif %}{{ p.endDate or 'Present' }}</p>{% endif %}
+{% if p.description %}<p>{{ p.description }}</p>{% endif %}
+{% if p.highlights %}<ul>{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}
+{% if p.technologies %}<p class="meta">{{ p.technologies|join(', ') }}</p>{% endif %}
+{% endfor %}
+{% endif %}

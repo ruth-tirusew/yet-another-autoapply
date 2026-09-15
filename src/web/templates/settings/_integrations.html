@@ -1,0 +1,62 @@
+<form hx-post="/settings/save/integrations" hx-swap="none" class="space-y-6 max-w-lg">
+  <fieldset class="space-y-3">
+    <legend class="font-semibold text-sm">Ever Jobs</legend>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="ever_jobs_enabled" value="true" {% if ever_jobs.enabled %}checked{% endif %} class="rounded"> Enabled
+    </label>
+    <input name="ever_jobs_api_url" value="{{ ever_jobs.api_url }}" placeholder="API URL" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+
+    <div class="space-y-2">
+      <p class="text-sm font-medium">Search query</p>
+      {% set mode = ever_jobs.search_mode or 'auto' %}
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="ever_jobs_search_mode" value="auto" {% if mode == 'auto' %}checked{% endif %} class="rounded"
+          hx-get="/settings/preview/search-query" hx-target="#search-query-preview" hx-trigger="change" hx-include="closest form">
+        Auto from keywords
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="radio" name="ever_jobs_search_mode" value="manual" {% if mode == 'manual' %}checked{% endif %} class="rounded"
+          hx-get="/settings/preview/search-query" hx-target="#search-query-preview" hx-trigger="change" hx-include="closest form">
+        Manual search term
+      </label>
+    </div>
+
+    <div id="search-query-preview" class="text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100"
+      hx-get="/settings/preview/search-query" hx-trigger="load" hx-include="closest form">
+      Loading preview…
+    </div>
+
+    <input name="ever_jobs_search_term" value="{{ ever_jobs.search_term or '' }}" placeholder="Manual search term"
+      class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm {% if mode != 'manual' %}hidden{% endif %}"
+      id="ever-jobs-manual-term">
+
+    <input type="number" name="ever_jobs_results_wanted" value="{{ ever_jobs.results_wanted }}" placeholder="Results wanted" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+  </fieldset>
+
+  <fieldset class="space-y-3">
+    <legend class="font-semibold text-sm">Scheduler</legend>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="scheduler_enabled" value="true" {% if scheduler.enabled %}checked{% endif %} class="rounded"> Enabled
+    </label>
+    <input type="number" name="crawl_interval_hours" value="{{ scheduler.crawl_interval_hours }}" placeholder="Crawl interval (hours)" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+  </fieldset>
+
+  <fieldset class="space-y-3">
+    <legend class="font-semibold text-sm">Source discovery</legend>
+    <label class="flex items-center gap-2 text-sm">
+      <input type="checkbox" name="auto_enable_discovered" value="true" {% if source_discovery.auto_enable_discovered %}checked{% endif %} class="rounded"> Auto-enable discovered
+    </label>
+    <input type="number" name="max_discovered" value="{{ source_discovery.max_discovered }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+  </fieldset>
+
+  <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm">Save</button>
+</form>
+
+<script>
+  document.querySelectorAll('input[name="ever_jobs_search_mode"]').forEach((el) => {
+    el.addEventListener('change', () => {
+      const manual = document.getElementById('ever-jobs-manual-term');
+      if (manual) manual.classList.toggle('hidden', el.value !== 'manual' || !el.checked);
+    });
+  });
+</script>

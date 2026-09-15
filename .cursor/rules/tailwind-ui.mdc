@@ -1,0 +1,21 @@
+---
+description: Enforce Tailwind UI and Refactoring UI design guidelines
+alwaysApply: true
+---
+
+# Tailwind UI & Refactoring UI Guidelines
+
+## 1. Architectural Rules
+- **Utility-First:** Compose styles inline using utility classes. Never abstract into semantic CSS classes unless an element repeats more than 5 times.
+- **Tailwind v4 / Modern Syntax:** Use the native variant syntax. Prefer modern CSS features (Flexbox, Grid, CSS Masking) over legacy hacks.
+
+## 2. Visual & Design System Scale
+- **Spacing Scale:** Stick strictly to Tailwind's default spacing system (e.g., `p-4`, `m-2`, `gap-6`). Never use arbitrary pixel strings like `h-[23px]` unless mapping a dynamic value.
+- **Hierarchy via Contrast:** Establish hierarchy using text weights (`font-medium`, `font-bold`) and selective contrast variations (`text-slate-900` vs `text-slate-500`) instead of major font-size discrepancies.
+- **Visual Balance:** Provide exponential padding for larger elements. Larger components need significantly more breathing room (`p-8` or `p-12`) to stay optically balanced.
+
+## 3. Component Color Strategy
+- **Semantic Shading:** Build interactive interfaces using logical shade increments. 
+  - Base surface: `bg-white` or `bg-slate-50`
+  - Hover states: Shift background or borders by exactly 100 units (e.g., `bg-blue-600 hover:bg-blue-700`).
+  - Disabled states: Avoid transparency; use flat gray overlays (`bg-slate-100 text-slate-400`).

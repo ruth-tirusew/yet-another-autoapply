@@ -1,0 +1,19 @@
+{# Reusable hiring_agent category score bars. Expects `categories` list from profile_summary. #}
+{% if categories %}
+<div class="space-y-3">
+  {% for cat in categories %}
+  <div>
+    <div class="flex justify-between text-sm mb-1">
+      <span class="font-medium text-slate-700 dark:text-slate-300">{{ cat.label }}</span>
+      <span class="text-slate-500 dark:text-slate-400">{{ cat.score|int }}/{{ cat.max|int }}</span>
+    </div>
+    <div class="h-2 bg-slate-100 dark:bg-slate-800 rounded-full">
+      <div class="h-2 bg-brand rounded-full" style="width: {{ cat.pct }}%"></div>
+    </div>
+    {% if cat.evidence and show_evidence %}
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ cat.evidence[:200] }}{% if cat.evidence|length > 200 %}…{% endif %}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

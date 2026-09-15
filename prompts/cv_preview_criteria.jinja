@@ -1,0 +1,12 @@
+Improve this resume by applying the coaching tips below.
+Return a JSON Resume patch (basics, work, skills, projects) — only fields you changed.
+
+## Coaching tips to apply
+{% for tip in cv_tips %}
+{{ loop.index }}. {{ tip.title }} — {{ tip.detail }}
+{% endfor %}
+
+## Current resume (JSON)
+{{ resume_json }}
+
+Apply the tips without inventing new facts. Strengthen summaries, bullet highlights, and project descriptions using existing content.

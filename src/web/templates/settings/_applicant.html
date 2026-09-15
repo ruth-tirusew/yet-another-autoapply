@@ -1,0 +1,26 @@
+<form hx-post="/settings/save/applicant" hx-swap="none" class="space-y-3 max-w-lg">
+  <p class="text-xs text-slate-500 dark:text-slate-400">URL fields override contact links from your uploaded CV when set.</p>
+  {% for field, label, input_type, placeholder in [
+    ('name', 'Name', 'text', ''),
+    ('email', 'Email', 'email', ''),
+    ('phone', 'Phone', 'tel', ''),
+    ('portfolio', 'Portfolio / website', 'url', 'https://yoursite.dev'),
+    ('linkedin', 'LinkedIn URL', 'url', 'https://linkedin.com/in/yourname'),
+    ('github', 'GitHub URL', 'url', 'https://github.com/yourname'),
+    ('location', 'Location', 'text', ''),
+    ('work_authorization', 'Work authorization', 'text', ''),
+    ('salary_expectation', 'Salary expectation', 'text', ''),
+  ] %}
+  <div>
+    <label class="block text-sm font-medium mb-1">{{ label }}</label>
+    <input
+      type="{{ input_type }}"
+      name="{{ field }}"
+      value="{{ applicant.get(field, '') }}"
+      {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+      class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm"
+    >
+  </div>
+  {% endfor %}
+  <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm">Save</button>
+</form>

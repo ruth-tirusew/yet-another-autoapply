@@ -1,0 +1,4 @@
+{% if resume.skills %}
+<h2>{{ section_title or 'Skills' }}</h2>
+<p class="skill-tags">{% for s in resume.skills %}<span class="skill-tag">{{ s.name or '' }}</span>{% endfor %}</p>
+{% endif %}

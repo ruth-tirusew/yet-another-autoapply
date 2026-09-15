@@ -1,0 +1,19 @@
+<div id="score-batch-status"
+  {% if state.running %}
+  hx-get="/partials/pipeline-status"
+  hx-trigger="every 2s"
+  hx-swap="outerHTML"
+  {% endif %}
+  class="text-sm">
+  {% if state.running %}
+  <p class="font-medium text-blue-900 dark:text-blue-200 flex items-center gap-2">
+    <span class="inline-block w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin"></span>
+    Scoring jobs in background (stage: {{ stage_label(state.stage) }})…
+  </p>
+  <p class="text-xs text-blue-800 dark:text-blue-300 mt-1">Check the <a href="/pipeline" class="underline">Pipeline</a> page for live log.</p>
+  {% elif state.error %}
+  <p class="text-red-600 dark:text-red-400">{{ state.error }}</p>
+  {% else %}
+  <p class="text-green-700 dark:text-green-400">Batch scoring finished. <a href="/jobs" class="underline font-medium">Refresh jobs</a></p>
+  {% endif %}
+</div>

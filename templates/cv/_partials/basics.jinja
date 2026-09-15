@@ -1,0 +1,6 @@
+{% set b = resume.basics or {} %}
+<h1>{{ b.name or 'Candidate' }}</h1>
+<p class="meta">{{ b.email or '' }}{% if b.phone %} | {{ b.phone }}{% endif %}{% if b.url %} | {{ b.url }}{% endif %}</p>
+{% if show_profiles and b.profiles %}
+<p class="meta">{% for p in b.profiles %}{{ p.network or '' }}: {{ p.url or '' }}{% if not loop.last %} | {% endif %}{% endfor %}</p>
+{% endif %}

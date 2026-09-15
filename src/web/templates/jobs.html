@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "partials/ui_macros.html" import status_badge %}
+{% block title %}Jobs — Job Crawler{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Jobs</h2>
+  <div class="flex flex-wrap gap-2 items-center">
+    {% if matchable_new > 0 %}
+    <form hx-post="/jobs/score" hx-target="#jobs-score-status" hx-swap="innerHTML" class="inline">
+      <button type="submit" class="px-3 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90 {% if pipeline_busy %}opacity-50{% endif %}" {% if pipeline_busy %}disabled{% endif %}>
+        Score next {{ match_limit if matchable_new > match_limit else matchable_new }} ({{ matchable_new }} new)
+      </button>
+    </form>
+    {% endif %}
+    <form method="get" class="flex flex-wrap gap-2 items-center text-sm">
+    <select name="status" class="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800">
+      <option value="">All statuses</option>
+      {% for s in ['new','scored','queued','approved','needs_verification','applied','skipped','failed','stale'] %}
+      <option value="{{ s }}" {% if filter_status == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <input type="number" name="min_score" placeholder="Min score" value="{{ filter_min_score }}" class="w-24 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800">
+    <button type="submit" class="px-3 py-1 bg-brand text-white rounded-lg">Filter</button>
+    </form>
+    <form method="post" action="/jobs/clear" class="inline"
+      onsubmit="return confirm('Permanently delete all of your jobs, applications, and event history? Your profile, CV templates, and sources will be kept. This cannot be undone.')">
+      <button type="submit" class="px-3 py-2 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-50 dark:hover:bg-red-950/30">
+        Clear jobs
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if request.query_params.get('cleared') %}
+<div class="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900 rounded-xl p-4 mb-4 text-sm text-green-800 dark:text-green-300">
+  Cleared {{ request.query_params.get('cleared') }} jobs from your queue.
+</div>
+{% endif %}
+
+{% if matchable_new > 0 %}
+<div id="jobs-score-status" class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-xl p-4 mb-4 text-sm text-blue-900 dark:text-blue-200"
+  {% if request.query_params.get('scoring') %}hx-get="/partials/pipeline-status" hx-trigger="load, every 3s" hx-swap="innerHTML"{% endif %}>
+  <p>
+    <span class="font-medium">{{ matchable_new }}</span> new jobs are ready for LLM scoring
+    (batch size: {{ match_limit }}).
+    {% if jobs_new > matchable_new %}
+    {{ jobs_new - matchable_new }} more are still <code class="text-xs">new</code> but need descriptions or prefilter first.
+    {% endif %}
+    Scored jobs: <span class="font-medium">{{ jobs_scored }}</span>.
+    Adjust batch size in <a href="/settings?tab=pipeline" class="underline font-medium">Settings → Pipeline</a>.
+  </p>
+</div>
+{% elif jobs_new > 0 %}
+<div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-xl p-4 mb-4 text-sm text-amber-900 dark:text-amber-200">
+  <p>{{ jobs_new }} jobs are <code class="text-xs">new</code> but not ready to score yet. Run <strong>Enrich</strong> and <strong>Prefilter</strong> on the <a href="/pipeline" class="underline font-medium">Pipeline</a> page first.</p>
+</div>
+{% endif %}
+
+{% if jobs %}
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-50 dark:bg-slate-800/50 text-left text-xs text-slate-500 uppercase">
+      <tr>
+        <th class="px-4 py-3">Title</th>
+        <th class="px-4 py-3">Company</th>
+        <th class="px-4 py-3">Score</th>
+        <th class="px-4 py-3">Vector</th>
+        <th class="px-4 py-3">Status</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+      {% for j in jobs %}
+      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+        <td class="px-4 py-3"><a href="/job/{{ j.id }}" class="text-brand hover:underline font-medium">{{ j.title or 'Untitled' }}</a></td>
+        <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{{ j.company or '—' }}</td>
+        <td class="px-4 py-3">{{ j.match_score|int if j.match_score is not none else '—' }}</td>
+        <td class="px-4 py-3">{% if j.vector_score is not none %}{{ '%.2f'|format(j.vector_score) }}{% else %}—{% endif %}</td>
+        <td class="px-4 py-3">{{ status_badge(j.status) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="bg-white dark:bg-slate-900 rounded-xl p-8 text-center border border-slate-100 dark:border-slate-800">
+  <p class="text-slate-500 dark:text-slate-400">No jobs yet. Run the pipeline from the <a href="/pipeline" class="text-brand hover:underline">Pipeline</a> page.</p>
+</div>
+{% endif %}
+{% endblock %}

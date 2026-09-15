@@ -1,0 +1,47 @@
+Score how well this candidate matches the job posting.
+
+## Candidate Resume
+{{ resume_text }}
+
+{% if github_text %}
+## GitHub Profile
+{{ github_text }}
+{% endif %}
+
+{% if profile_evaluation %}
+## Hiring-agent profile evaluation
+{{ profile_evaluation }}
+{% endif %}
+
+{% if candidate_location %}
+## Candidate location
+{{ candidate_location }} ({{ candidate_country }})
+{% endif %}
+
+## Job Posting
+Title: {{ job_title }}
+Company: {{ job_company }}
+Location: {{ job_location }}
+
+{{ job_description }}
+
+## Instructions
+Return JSON with:
+- overall_score (0-100 integer)
+- skill_match: {score, max: 40, evidence}
+- experience_match: {score, max: 35, evidence}
+- role_fit: {score, max: 25, evidence}
+- gaps: list of missing requirements
+- strengths: list of strengths that help for THIS specific job (most relevant first)
+- recommendation: "apply", "maybe", or "skip"
+- tailoring_hints: list of specific edits to emphasize for this job
+
+Scoring rules:
+- Score based on actual overlap. Do not assume skills not in the resume.
+- strengths must be job-relevant, not just impressive resume facts. Lead with transferable engineering skills unless the posting explicitly mentions the candidate's niche domain.
+- Use the hiring-agent profile evaluation as additional evidence of real strengths and limits.
+- role_fit: Compare job title/level to candidate background. Backend/IC engineer vs Lead/Director/Transformation/Manager roles should score ≤10/25 unless resume shows equivalent leadership.
+- If the job restricts hiring to specific countries or regions (e.g. "Remote - Mexico", "Remote - Argentina", "US only", "must be located in Colombia") and the candidate country is not eligible, recommend "skip" and cap overall_score below 40.
+- Treat country-specific remote as NOT worldwide remote — location ineligibility overrides strong skill overlap.
+- recommendation "apply" only when role_fit ≥ 15/25, major requirements are met, and the candidate is location-eligible.
+- recommendation "skip" when role level mismatch is severe or location makes candidate ineligible.

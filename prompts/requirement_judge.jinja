@@ -1,0 +1,31 @@
+For each requirement below, decide whether the candidate's retrieved resume evidence satisfies it.
+
+{% if candidate_summary %}
+## Candidate summary
+{{ candidate_summary }}
+{% endif %}
+
+## Requirements and retrieved evidence
+{% for item in items %}
+### {{ item.id }} [{{ item.kind }}] {{ item.text }}
+{% if item.chunks %}
+{% for chunk in item.chunks %}
+- ({{ chunk.id }}) {{ chunk.ref }}: {{ chunk.text }}
+{% endfor %}
+{% else %}
+- (no resume evidence retrieved)
+{% endif %}
+
+{% endfor %}
+
+## Instructions
+Return JSON: {"verdicts": [{id, verdict, confidence, evidence, note}]} with one entry per requirement id above.
+- verdict: "met" when the evidence clearly satisfies the requirement; "partial" when the evidence shows related but weaker or adjacent experience; "missing" when the evidence does not support it.
+- confidence: 0.0-1.0.
+- evidence: list of {chunk_id, quote} — the chunk ids you actually relied on, with a short quote from that chunk. Empty list for "missing".
+- note: one short clause explaining the verdict.
+
+Rules:
+- Never mark "met" without citing a chunk id from that requirement's evidence.
+- A skill named only in a skills list is at most "partial" for a requirement that asks for hands-on or production experience with it.
+- Do not credit transferable or similar technologies as "met" — that is "partial".

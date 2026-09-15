@@ -1,0 +1,11 @@
+<form hx-post="/settings/save/cover_letter" hx-swap="none" class="space-y-4 max-w-lg">
+  <div>
+    <label class="block text-sm font-medium mb-1">Max words</label>
+    <input type="number" name="max_words" value="{{ cover_letter.max_words }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+  </div>
+  <div>
+    <label class="block text-sm font-medium mb-1">Tone</label>
+    <input name="tone" value="{{ cover_letter.tone }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+  </div>
+  <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm">Save</button>
+</form>

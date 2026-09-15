@@ -1,0 +1,18 @@
+Analyze these recurring skill gaps from the user's top job matches:
+
+Gap frequency (gap → count):
+{% for gap, count in gap_frequency.items() %}
+- {{ gap }}: {{ count }}
+{% endfor %}
+
+Top gaps:
+{% for g in top_gaps %}
+- {{ g }}
+{% endfor %}
+
+Return JSON with:
+- top_gaps: ordered list of 5-8 most important gaps
+- gap_frequency: same counts as input (top entries)
+- learning_paths: 3-5 concrete learning actions (courses, projects, certs)
+- roles_unlocked: 2-4 role types they'd qualify for more often after closing gaps
+- summary: 2-3 sentence coaching narrative

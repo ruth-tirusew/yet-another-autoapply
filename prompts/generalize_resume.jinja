@@ -1,0 +1,17 @@
+Rewrite this resume into a generalized JSON Resume variant for matching against broad engineering roles.
+
+Rules:
+- Keep all facts — do not invent experience, dates, employers, or skills.
+- Lead work bullets and summaries with transferable engineering skills (APIs, microservices, backend systems, data pipelines, platform work).
+- Abstract domain-specific phrasing into general equivalents (e.g. product-specific finance terms → "lending platform backend", "core banking customization").
+- Preserve the same JSON Resume top-level keys: basics, work, education, skills, projects, awards.
+- Do not delete work entries, projects, or skills — rephrase only.
+
+Also return niche_terms: a list of domain-specific phrases from the ORIGINAL resume that you abstracted away (product names, niche domain jargon, employer-specific terminology). Lowercase multi-word phrases, 2–6 words each, max 20 terms.
+
+## Original resume (JSON)
+{{ resume_json }}
+
+Return JSON with exactly two keys:
+- resume: the generalized JSON Resume object
+- niche_terms: list of strings

@@ -1,0 +1,29 @@
+Tailor this resume for the job below.
+
+## Master Resume (JSON)
+{{ resume_json }}
+
+## Job
+Title: {{ job_title }}
+Company: {{ job_company }}
+
+{{ job_description }}
+
+## ATS job fit analysis
+{{ ats_context }}
+
+{% if profile_evaluation %}
+## Profile evaluation (hiring_agent)
+{{ profile_evaluation }}
+{% endif %}
+
+## Tailoring hints
+{% for hint in tailoring_hints %}
+- {{ hint }}
+{% endfor %}
+
+Return the full tailored resume as JSON Resume format.
+Keep all factual content; adjust summary, highlights order, and skill emphasis only.
+Do NOT invent experience, employers, or skills to cover gaps listed in the ATS analysis.
+The basics.summary must reflect "{{ job_title }}" — not a generic backend/fintech pitch.
+Reorder skill keywords so job-relevant terms appear first; move niche finance-domain keywords to the end unless the job posting mentions that domain.
