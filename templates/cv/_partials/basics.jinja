@@ -1,6 +1,15 @@
 {% set b = resume.basics or {} %}
+{% set loc = b.location or {} %}
+<div class="header">
 <h1>{{ b.name or 'Candidate' }}</h1>
-<p class="meta">{{ b.email or '' }}{% if b.phone %} | {{ b.phone }}{% endif %}{% if b.url %} | {{ b.url }}{% endif %}</p>
+<p class="contact">{% set parts = [] %}
+{%- if b.email %}{% set _ = parts.append(b.email) %}{% endif -%}
+{%- if b.phone %}{% set _ = parts.append(b.phone) %}{% endif -%}
+{%- if loc.city %}{% set _ = parts.append(loc.city) %}{% endif -%}
+{%- if b.url %}{% set _ = parts.append(b.url) %}{% endif -%}
+{%- for part in parts %}{{ part }}{% if not loop.last %}<span class="sep">·</span>{% endif %}{% endfor -%}
+</p>
 {% if show_profiles and b.profiles %}
-<p class="meta">{% for p in b.profiles %}{{ p.network or '' }}: {{ p.url or '' }}{% if not loop.last %} | {% endif %}{% endfor %}</p>
+<p class="contact">{% for p in b.profiles %}{{ p.network or '' }}: {{ p.url or '' }}{% if not loop.last %}<span class="sep">·</span>{% endif %}{% endfor %}</p>
 {% endif %}
+</div>

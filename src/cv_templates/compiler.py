@@ -51,30 +51,62 @@ body {{
   background: #fff;
   font-size: {typo.body_size};
 }}
+.header {{
+  border-bottom: 2px solid {colors.accent};
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+}}
 h1 {{
-  margin-bottom: 0;
+  margin: 0;
   color: {colors.heading};
   font-size: {h1};
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}}
+.contact {{
+  color: {typo.meta_color};
+  font-size: 13px;
+  margin-top: 6px;
+}}
+.contact .sep {{
+  color: {colors.border};
+  margin: 0 6px;
 }}
 h2 {{
-  border-bottom: 1px solid {colors.border};
+  border-bottom: 2px solid {colors.accent};
   margin-top: {section_margin};
+  margin-bottom: 10px;
   color: {colors.heading};
   font-size: {h2};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   padding-bottom: 4px;
 }}
 h3 {{
   color: {colors.heading};
   font-size: {h3};
-  margin-bottom: 4px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}}
+.org {{
+  color: {typo.meta_color};
+  font-weight: 400;
+}}
+.entry {{
+  margin-bottom: {section_margin};
 }}
 ul {{
-  margin: 4px 0;
+  margin: 6px 0 0;
   padding-left: 20px;
+}}
+li {{
+  margin-bottom: 3px;
 }}
 .meta {{
   color: {typo.meta_color};
   font-size: 13px;
+  margin: 0 0 6px;
 }}
 .summary {{
   margin-top: 12px;
