@@ -9,6 +9,7 @@ with no real evidence is downgraded rather than trusted.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Sequence
 
 from pydantic import BaseModel, Field
@@ -38,6 +39,17 @@ class _Judgement(BaseModel):
 
 class _JudgeResponse(BaseModel):
     verdicts: list[_Judgement] = Field(default_factory=list)
+
+
+def _normalize_id(raw: str) -> str:
+    """Strip stray punctuation models sometimes wrap ids in (e.g. ':r12').
+
+    Requirement ids are always plain alphanumeric (``r1``, ``pc3``), so
+    dropping every non-alphanumeric character is safe and makes the
+    verdict-to-requirement join robust to model formatting quirks instead of
+    silently failing an exact-string match.
+    """
+    return re.sub(r"[^a-zA-Z0-9]", "", raw or "")
 
 
 def _clip(text: str, limit: int = EVIDENCE_CHARS) -> str:
@@ -108,6 +120,9 @@ def lexical_verdicts(
     return out
 
 
+JUDGE_BATCH_SIZE = 6
+
+
 def judge_requirements(
     requirements: Sequence[Requirement],
     retrieved: dict[str, list[tuple[ResumeChunk, float]]],
@@ -115,12 +130,38 @@ def judge_requirements(
     candidate_summary: str = "",
     model: str | None = None,
 ) -> list[RequirementVerdict]:
-    """Ask the model for one verdict per requirement, then validate the citations."""
+    """Ask the model for one verdict per requirement, then validate the citations.
+
+    Requirements are judged in small batches rather than one call for the
+    whole posting. A single call covering everything (up to
+    :data:`~src.matching.requirements.MAX_REQUIREMENTS`, 18) is fine for a
+    strong hosted model, but a small local model routinely drops most of a
+    long list — returning verdicts for only the last few ids and defaulting
+    the rest to "missing" with no judgement at all. Batching keeps each call
+    within what a small model can actually attend to, at the cost of more
+    calls per job.
+    """
     if not requirements:
         return []
 
     cfg = get_merged_config()
     model = model or cfg["quality_model"]
+    out: list[RequirementVerdict] = []
+    for start in range(0, len(requirements), JUDGE_BATCH_SIZE):
+        batch = list(requirements[start : start + JUDGE_BATCH_SIZE])
+        out.extend(
+            _judge_batch(batch, retrieved, candidate_summary=candidate_summary, model=model)
+        )
+    return out
+
+
+def _judge_batch(
+    requirements: Sequence[Requirement],
+    retrieved: dict[str, list[tuple[ResumeChunk, float]]],
+    *,
+    candidate_summary: str,
+    model: str,
+) -> list[RequirementVerdict]:
     items = build_items(requirements, retrieved)
     prompt = render_template(
         "requirement_judge.jinja",
@@ -135,12 +176,12 @@ def judge_requirements(
         temperature=0.0,
     )
     parsed = _JudgeResponse(**data)
-    by_id = {j.id.strip(): j for j in parsed.verdicts if j.id}
+    by_id = {_normalize_id(j.id): j for j in parsed.verdicts if _normalize_id(j.id)}
 
     out: list[RequirementVerdict] = []
     for requirement in requirements:
         shown = {chunk.id: chunk for chunk, _ in retrieved.get(requirement.id, [])}
-        judgement = by_id.get(requirement.id)
+        judgement = by_id.get(_normalize_id(requirement.id))
         if judgement is None:
             out.append(
                 RequirementVerdict(

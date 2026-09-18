@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import struct
+import numpy as np
 from datetime import datetime, timezone
 from typing import Iterable, Sequence
 
@@ -218,8 +219,6 @@ def similarity_matrix(queries: Sequence[Sequence[float]], docs: Sequence[Sequenc
     if not queries or not docs:
         return [[0.0] * len(docs) for _ in queries]
     try:
-        import numpy as np
-
         q = np.asarray(queries, dtype="float32")
         d = np.asarray(docs, dtype="float32")
         if q.shape[1] != d.shape[1]:

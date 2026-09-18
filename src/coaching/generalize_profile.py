@@ -127,6 +127,35 @@ def _merge_extra_terms(user_id: int, terms: list[str]) -> list[str]:
     return sorted(merged)
 
 
+def _restore_work_dates(
+    original_work: list[Any] | None, generalized_work: list[Any] | None
+) -> list[Any]:
+    """Copy startDate/endDate back from the source resume, by position.
+
+    The generalize prompt asks the model to keep every fact, but nothing
+    stops a small local model from dropping fields it doesn't think matter —
+    dates included, which silently zeroes years-of-experience for any
+    posting scored against this variant. Dates are objective facts the
+    generalizer has no reason to rewrite, so they're restored deterministically
+    here rather than left to prompt compliance.
+    """
+    if not isinstance(generalized_work, list):
+        return generalized_work or []
+    original = original_work if isinstance(original_work, list) else []
+    restored = []
+    for i, entry in enumerate(generalized_work):
+        if not isinstance(entry, dict):
+            restored.append(entry)
+            continue
+        entry = dict(entry)
+        orig = original[i] if i < len(original) and isinstance(original[i], dict) else {}
+        for field in ("startDate", "endDate"):
+            if not entry.get(field) and orig.get(field):
+                entry[field] = orig[field]
+        restored.append(entry)
+    return restored
+
+
 def build_general_resume(user_id: int | None = None, *, force: bool = False) -> GeneralizeResult:
     uid = resolve_user_id(user_id)
     profile = get_profile(uid)
@@ -163,6 +192,7 @@ def build_general_resume(user_id: int | None = None, *, force: bool = False) -> 
         from src.profile_format import normalize_skills
 
         general = {**general, "skills": normalize_skills(general.get("skills"))}
+    general = {**general, "work": _restore_work_dates(resume.get("work"), general.get("work"))}
     raw_terms = data.get("niche_terms") or []
     terms = [
         str(t).strip().lower()

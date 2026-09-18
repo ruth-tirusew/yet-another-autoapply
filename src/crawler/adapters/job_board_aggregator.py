@@ -1,4 +1,9 @@
-"""Adapter for Feashliaa/job-board-aggregator chunked GitHub data."""
+"""Adapter for Feashliaa/job-board-aggregator chunked job data.
+
+The aggregator's generated chunks now live in a separate data repo
+(Feashliaa/job-board-data), served over GitHub Pages, not in the
+job-board-aggregator repo itself.
+"""
 
 from __future__ import annotations
 
@@ -14,9 +19,7 @@ from src.crawler.http import get
 from src.db import get_existing_url_hashes, url_hash
 from src.tenant import resolve_user_id
 
-DEFAULT_BASE_URL = (
-    "https://raw.githubusercontent.com/Feashliaa/job-board-aggregator/main/data/chunks"
-)
+DEFAULT_BASE_URL = "https://feashliaa.github.io/job-board-data/data/chunks"
 
 
 def _format_company(slug: str) -> str:

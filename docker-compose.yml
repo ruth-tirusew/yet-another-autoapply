@@ -7,17 +7,5 @@ services:
       - ./data:/app/data
     environment:
       - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production}
-      - OLLAMA_HOST=http://ollama:11434
-    depends_on:
-      - ollama
+      - OLLAMA_HOST=http://localhost:11434
     command: ["python", "cli.py", "review", "serve"]
-
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
-volumes:
-  ollama_data:

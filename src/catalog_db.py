@@ -158,10 +158,6 @@ def migrate_catalog_schema(conn) -> None:
         ("requirements_hash", "requirements_hash TEXT"),
         ("requirements_model", "requirements_model TEXT"),
         ("requirements_at", "requirements_at TEXT"),
-        # Hash of the text last used to warm this job's posting-chunk vectors
-        # (src.embeddings.embed_catalog_jobs) — a mismatch means the
-        # description changed (e.g. the enrich stage filled it in) and the
-        # job needs re-embedding, not just jobs with no embedding at all.
         ("embed_content_hash", "embed_content_hash TEXT"),
     ):
         if column not in cat_cols:

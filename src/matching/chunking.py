@@ -37,6 +37,21 @@ _TAIL_HEADINGS = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+# Many ATS postings (Greenhouse, Lever, Ashby...) have no headings at all —
+# every sentence sits on its own line with no markup — so `_TAIL_HEADINGS`
+# never fires and `requirement_section` falls back to the whole description,
+# benefits/EEO/application-form boilerplate included. These phrases mark the
+# same kind of tail content but can appear mid-sentence rather than on their
+# own heading line, so they're matched anywhere rather than anchored to a line.
+_BOILERPLATE_TAIL = re.compile(
+    r"(?:base\s+pay\s+is\s+just|total\s+rewards\s+program|"
+    r"equal\s+opportunity\s+employer|create\s+a\s+job\s+alert|"
+    r"apply\s+for\s+this\s+job|indicates?\s+a\s+required\s+field|"
+    r"accepted\s+file\s+types|autofill\s+my\s+application|"
+    r"talent\s+matching\s+tool|hiring\s+salary\s+range)",
+    re.IGNORECASE,
+)
+
 _BULLET = re.compile(r"^\s*(?:[-*•·–—▪◦]|\d+[.)])\s+")
 _NICE_MARKER = re.compile(
     r"\b(?:nice[-\s]?to[-\s]?have|preferred|bonus|plus|desirable|a\s+plus|"
@@ -175,8 +190,11 @@ def requirement_section(description: str) -> str:
         return ""
     start_match = _REQ_HEADINGS.search(text)
     start = start_match.start() if start_match else 0
-    tail_match = _TAIL_HEADINGS.search(text, start + 1 if start_match else 0)
-    end = tail_match.start() if tail_match else len(text)
+    search_from = start + 1 if start_match else 0
+    tail_match = _TAIL_HEADINGS.search(text, search_from)
+    boilerplate_match = _BOILERPLATE_TAIL.search(text, search_from)
+    ends = [m.start() for m in (tail_match, boilerplate_match) if m]
+    end = min(ends) if ends else len(text)
     section = text[start:end].strip()
     return section or text.strip()
 
