@@ -2,11 +2,11 @@
   <a href="/applications?tab=active{% if filter_min_score %}&min_score={{ filter_min_score }}{% endif %}"
      hx-get="/applications?tab=active{% if filter_min_score %}&min_score={{ filter_min_score }}{% endif %}"
      hx-target="#applications-panel" hx-swap="innerHTML" hx-push-url="true"
-     class="px-3 py-1.5 text-sm rounded-lg {% if filter_tab == 'active' %}bg-brand text-white{% else %}bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">Active</a>
+     class="px-3 py-1.5 text-sm rounded-lg {% if filter_tab == 'active' %}bg-brand text-white{% else %}bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700{% endif %}">Active</a>
   <a href="/applications?tab=history{% if filter_min_score %}&min_score={{ filter_min_score }}{% endif %}"
      hx-get="/applications?tab=history{% if filter_min_score %}&min_score={{ filter_min_score }}{% endif %}"
      hx-target="#applications-panel" hx-swap="innerHTML" hx-push-url="true"
-     class="px-3 py-1.5 text-sm rounded-lg {% if filter_tab == 'history' %}bg-brand text-white{% else %}bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">History</a>
+     class="px-3 py-1.5 text-sm rounded-lg {% if filter_tab == 'history' %}bg-brand text-white{% else %}bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700{% endif %}">History</a>
 </div>
 
 {% if retry_summary %}
@@ -36,14 +36,14 @@
       hx-get="/applications" hx-target="#applications-panel" hx-swap="innerHTML" hx-push-url="true"
       hx-trigger="submit, change from:select delay:200ms">
   <input type="hidden" name="tab" value="{{ filter_tab }}">
-  <select name="status" class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm">
+  <select name="status" class="border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-1.5 text-sm">
     <option value="">All statuses</option>
     {% for s in all_statuses %}
     <option value="{{ s }}" {% if filter_status == s %}selected{% endif %}>{{ s }}</option>
     {% endfor %}
   </select>
-  <input type="number" name="min_score" placeholder="Min score" value="{{ filter_min_score or '' }}" class="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm w-28">
-  <button type="submit" class="px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">Filter</button>
+  <input type="number" name="min_score" placeholder="Min score" value="{{ filter_min_score or '' }}" class="border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-1.5 text-sm w-28">
+  <button type="submit" class="px-3 py-1.5 text-sm bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700">Filter</button>
 </form>
 
 <div id="app-table">

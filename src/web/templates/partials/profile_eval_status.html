@@ -1,12 +1,12 @@
 {% if profile_summary.loaded %}
   {% if profile_summary.evaluated %}
-  <p class="font-semibold text-slate-900 dark:text-slate-100">{{ profile_summary.score }}/100</p>
-  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">hiring_agent evaluated</p>
+  <p class="font-semibold text-stone-900 dark:text-stone-100">{{ profile_summary.score }}/100</p>
+  <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">hiring_agent evaluated</p>
   {% else %}
   <p class="font-semibold text-amber-700 dark:text-amber-400">Pending</p>
-  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1"><a href="/profile" class="text-brand hover:underline">Run evaluation</a></p>
+  <p class="text-xs text-stone-500 dark:text-stone-400 mt-1"><a href="/profile" class="text-brand hover:underline">Run evaluation</a></p>
   {% endif %}
 {% else %}
-<p class="font-semibold text-slate-500 dark:text-slate-400">Not loaded</p>
-<p class="text-xs text-slate-500 dark:text-slate-400 mt-1"><a href="/profile" class="text-brand hover:underline">Upload CV</a></p>
+<p class="font-semibold text-stone-500 dark:text-stone-400">Not loaded</p>
+<p class="text-xs text-stone-500 dark:text-stone-400 mt-1"><a href="/profile" class="text-brand hover:underline">Upload CV</a></p>
 {% endif %}

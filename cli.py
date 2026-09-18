@@ -61,7 +61,8 @@ def main():
     review = sub.add_parser("review", help="Review queue commands")
     review_sub = review.add_subparsers(dest="review_cmd")
     review_sub.add_parser("list", help="List queued jobs")
-    review_sub.add_parser("serve", help="Start review web UI")
+    serve_p = review_sub.add_parser("serve", help="Start review web UI")
+    serve_p.add_argument("--reload", action="store_true", help="Auto-restart the server on code/template changes")
     approve = review_sub.add_parser("approve", help="Approve a job")
     approve.add_argument("job_id", type=int)
     reject = review_sub.add_parser("reject", help="Reject a job")
@@ -289,7 +290,15 @@ def main():
         elif args.review_cmd == "serve":
             import uvicorn
 
-            uvicorn.run("src.web.app:app", host="127.0.0.1", port=8088, reload=False)
+            from src.config import ROOT
+
+            uvicorn.run(
+                "src.web.app:app",
+                host="127.0.0.1",
+                port=8088,
+                reload=args.reload,
+                reload_dirs=[str(ROOT / "src"), str(ROOT / "templates")] if args.reload else None,
+            )
         elif args.review_cmd == "approve":
             from src.apply.dispatcher import apply_to_job
             from src.db import set_job_status

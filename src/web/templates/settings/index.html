@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Settings — Job Crawler{% endblock %}
 {% block content %}
-<h2 class="text-2xl font-bold mb-6 text-slate-900 dark:text-slate-100">Settings</h2>
+<h2 class="text-2xl font-bold mb-6 text-stone-900 dark:text-stone-100">Settings</h2>
 
 <div class="flex gap-2 mb-4 flex-wrap">
   {% for tab in tabs %}
   <button hx-get="/settings/panel/{{ tab }}" hx-target="#settings-panel" hx-swap="innerHTML"
-    class="px-3 py-1.5 text-sm rounded-lg {% if active_tab == tab %}bg-brand text-white{% else %}bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">{{ tab|replace('_', ' ')|title }}</button>
+    class="px-3 py-1.5 text-sm rounded-lg {% if active_tab == tab %}bg-brand text-white{% else %}bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700{% endif %}">{{ tab|replace('_', ' ')|title }}</button>
   {% endfor %}
 </div>
 
-<div id="settings-panel" class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100" hx-get="/settings/panel/{{ active_tab }}" hx-trigger="load">
+<div id="settings-panel" class="bg-white dark:bg-stone-900 rounded-xl p-5 shadow-sm border border-stone-100 dark:border-stone-800 text-stone-900 dark:text-stone-100" hx-get="/settings/panel/{{ active_tab }}" hx-trigger="load">
   Loading…
 </div>
 {% endblock %}

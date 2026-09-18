@@ -99,6 +99,27 @@ class LocationParsingTests(unittest.TestCase):
                 self.assertFalse(ok)
                 self.assertIn("Restricted", reason)
 
+    def test_multi_office_listing_is_not_worldwide(self):
+        loc = (
+            "Amsterdam, Netherlands; Belgrade, Serbia; Berlin, Germany; "
+            "Limassol, Cyprus; London, United Kingdom; Madrid, Spain; "
+            "Munich, Germany; Paphos, Cyprus; Prague, Czech Republic; "
+            "Remote, Germany; Warsaw, Poland; Yerevan, Armenia"
+        )
+        parsed = parse_job_location(loc)
+        self.assertFalse(parsed.is_worldwide)
+        self.assertIn("DE", parsed.allowed_country_codes)
+        self.assertIn("CY", parsed.allowed_country_codes)
+        ok, reason = candidate_matches_location(parsed, "ET")
+        self.assertFalse(ok)
+        self.assertIn("Restricted", reason)
+        self.assertTrue(candidate_matches_location(parsed, "DE")[0])
+
+    def test_multi_office_listing_with_us_state_tail_not_misread(self):
+        loc = "San Francisco, CA; Remote"
+        parsed = parse_job_location(loc)
+        self.assertTrue(parsed.is_worldwide)
+
 
 if __name__ == "__main__":
     unittest.main()

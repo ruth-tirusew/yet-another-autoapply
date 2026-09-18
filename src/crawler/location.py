@@ -30,6 +30,7 @@ _COUNTRY_NAME_TO_CODE: dict[str, str] = {
     "colombia": "CO",
     "costa rica": "CR",
     "croatia": "HR",
+    "cyprus": "CY",
     "czech republic": "CZ",
     "czechia": "CZ",
     "denmark": "DK",
@@ -126,7 +127,7 @@ _REGION_NAME_TO_CODES: dict[str, frozenset[str]] = {
             # Europe
             "AL", "AM", "AT", "BY", "BE", "BA", "BG", "HR", "CZ", "DK", "EE", "FI", "FR",
             "GE", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "NL", "NO", "PL", "PT",
-            "RO", "RU", "RS", "SK", "SI", "ES", "SE", "CH", "UA", "GB", "EU",
+            "RO", "RU", "RS", "SK", "SI", "ES", "SE", "CH", "UA", "GB", "EU", "CY",
             # Middle East
             "IL", "JO", "SA", "AE", "TR",
             # Africa
@@ -225,6 +226,46 @@ def _token_to_code(token: str) -> str | None:
     return None
 
 
+def _token_to_code_strict(token: str) -> str | None:
+    """Like _token_to_code but refuses bare 2-letter tokens (e.g. "CA", "GA")
+    that collide with US state postal codes, since those only appear once we
+    start splitting "City, X" segments out of a multi-office listing."""
+    token = _normalize_token(token)
+    if not token or len(token) <= 2:
+        return None
+    if token in _worldwide_markers():
+        return None
+    if token in _COUNTRY_NAME_TO_CODE:
+        return _COUNTRY_NAME_TO_CODE[token]
+    only = _ONLY_SUFFIX_RE.match(token)
+    if only:
+        return _token_to_code_strict(only.group(1))
+    return None
+
+
+_LOCATION_LIST_SPLIT_RE = re.compile(r"\s*;\s*")
+
+
+def _extract_office_country_codes(location: str) -> set[str]:
+    """Extract country codes out of an explicit multi-office listing such as
+    "Amsterdam, Netherlands; Berlin, Germany; Remote, Germany" — a format job
+    boards commonly use that otherwise matches none of the remote-location or
+    single-country patterns and silently falls through to "worldwide"."""
+    segments = _LOCATION_LIST_SPLIT_RE.split(location)
+    if len(segments) < 2:
+        return set()
+    codes: set[str] = set()
+    for segment in segments:
+        segment = segment.strip()
+        if not segment:
+            continue
+        tail = segment.rsplit(",", 1)[-1].strip()
+        code = _token_to_code_strict(tail) or _token_to_code_strict(segment)
+        if code:
+            codes.add(code)
+    return codes
+
+
 def _tokens_to_codes(text: str) -> set[str]:
     codes: set[str] = set()
     for part in _COUNTRY_SPLIT_RE.split(text):
@@ -278,7 +319,8 @@ def parse_job_location(location: str = "", description: str = "") -> ParsedLocat
 
     remote_codes = _extract_remote_country_codes(loc)
     desc_codes = _extract_description_country_codes(desc)
-    allowed = remote_codes | desc_codes
+    office_codes = _extract_office_country_codes(loc)
+    allowed = remote_codes | desc_codes | office_codes
 
     if loc_lower in _COUNTRY_NAME_TO_CODE:
         allowed.add(_COUNTRY_NAME_TO_CODE[loc_lower])

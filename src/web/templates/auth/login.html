@@ -16,17 +16,17 @@
   <input type="hidden" name="next" value="{{ next }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <div>
-    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+    <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Email</label>
     <input type="email" name="email" required autocomplete="email"
-      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+      class="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-sm">
   </div>
   <div>
     <div class="flex items-center justify-between mb-1">
-      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+      <label class="block text-sm font-medium text-stone-700 dark:text-stone-300">Password</label>
       <a href="/forgot-password" class="text-xs text-brand hover:underline">Forgot password?</a>
     </div>
     <input type="password" name="password" required autocomplete="current-password"
-      class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm">
+      class="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-sm">
   </div>
   <button type="submit"
     class="w-full py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-blue-700 transition-colors">
@@ -36,19 +36,19 @@
 
 {% if github_enabled or google_enabled %}
 <div class="relative my-6">
-  <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200 dark:border-slate-700"></div></div>
-  <div class="relative flex justify-center text-xs"><span class="px-2 bg-white dark:bg-slate-900 text-slate-400">or continue with</span></div>
+  <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-stone-200 dark:border-stone-700"></div></div>
+  <div class="relative flex justify-center text-xs"><span class="px-2 bg-white dark:bg-stone-900 text-stone-400">or continue with</span></div>
 </div>
 <div class="space-y-2">
   {% if github_enabled %}
   <a href="/auth/github?next={{ next | urlencode }}"
-    class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+    class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-stone-200 dark:border-stone-700 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
     GitHub
   </a>
   {% endif %}
   {% if google_enabled %}
   <a href="/auth/google?next={{ next | urlencode }}"
-    class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+    class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-stone-200 dark:border-stone-700 text-sm font-medium hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
     Google
   </a>
   {% endif %}

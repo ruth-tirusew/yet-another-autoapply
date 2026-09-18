@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Target Companies — Job Crawler{% endblock %}
 {% block content %}
-<h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">Target Companies</h2>
-<p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Tier 1 companies sync first. Jobs are crawled into the shared catalog.</p>
+<h2 class="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-4">Target Companies</h2>
+<p class="text-sm text-stone-600 dark:text-stone-400 mb-4">Tier 1 companies sync first. Jobs are crawled into the shared catalog.</p>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-100 dark:border-stone-800">
     <h3 class="font-semibold mb-3">Add company</h3>
     <form method="post" action="/targets/add" class="space-y-3 text-sm">
-      <input name="company_slug" placeholder="Company slug (e.g. stripe)" required class="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
-      <input name="display_name" placeholder="Display name" class="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
-      <input name="careers_url" placeholder="Careers URL (for ATS detect)" class="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
-      <select name="ats_type" class="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+      <input name="company_slug" placeholder="Company slug (e.g. stripe)" required class="w-full border border-stone-200 dark:border-stone-700 rounded-lg px-3 py-2 bg-white dark:bg-stone-800">
+      <input name="display_name" placeholder="Display name" class="w-full border border-stone-200 dark:border-stone-700 rounded-lg px-3 py-2 bg-white dark:bg-stone-800">
+      <input name="careers_url" placeholder="Careers URL (for ATS detect)" class="w-full border border-stone-200 dark:border-stone-700 rounded-lg px-3 py-2 bg-white dark:bg-stone-800">
+      <select name="ats_type" class="w-full border border-stone-200 dark:border-stone-700 rounded-lg px-3 py-2 bg-white dark:bg-stone-800">
         <option value="">Auto-detect</option>
         <option value="greenhouse">Greenhouse</option>
         <option value="lever">Lever</option>
@@ -19,7 +19,7 @@
         <option value="workable">Workable</option>
         <option value="smartrecruiters">SmartRecruiters</option>
       </select>
-      <select name="tier" class="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 bg-white dark:bg-slate-800">
+      <select name="tier" class="w-full border border-stone-200 dark:border-stone-700 rounded-lg px-3 py-2 bg-white dark:bg-stone-800">
         <option value="1">Tier 1 — priority</option>
         <option value="2" selected>Tier 2</option>
         <option value="3">Tier 3</option>
@@ -28,15 +28,15 @@
     </form>
   </div>
 
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-100 dark:border-stone-800">
     <h3 class="font-semibold mb-3">Your list ({{ companies|length }})</h3>
     {% if companies %}
     <ul class="space-y-2 text-sm">
       {% for c in companies %}
-      <li class="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+      <li class="flex items-center justify-between gap-2 p-2 rounded-lg bg-stone-50 dark:bg-stone-800/50">
         <div>
           <span class="font-medium">{{ c.display_name or c.company_slug }}</span>
-          <span class="text-xs text-slate-500 ml-2">T{{ c.tier }} · {{ c.ats_type }}</span>
+          <span class="text-xs text-stone-500 ml-2">T{{ c.tier }} · {{ c.ats_type }}</span>
         </div>
         <form method="post" action="/targets/{{ c.id }}/delete" class="inline">
           <button type="submit" class="text-xs text-red-600 hover:underline">Remove</button>
@@ -45,7 +45,7 @@
       {% endfor %}
     </ul>
     {% else %}
-    <p class="text-slate-500 dark:text-slate-400 text-sm">No target companies yet. Add companies you want to watch closely.</p>
+    <p class="text-stone-500 dark:text-stone-400 text-sm">No target companies yet. Add companies you want to watch closely.</p>
     {% endif %}
   </div>
 </div>
