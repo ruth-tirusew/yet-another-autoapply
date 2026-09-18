@@ -2,7 +2,7 @@
 {% from "partials/ui_macros.html" import pipeline_flow, pipeline_health_bar %}
 {% block title %}Pipeline — Job Crawler{% endblock %}
 {% block content %}
-<h2 class="text-2xl font-bold mb-4 text-slate-900 dark:text-slate-100">Pipeline</h2>
+<h2 class="text-2xl font-bold mb-4 text-stone-900 dark:text-stone-100">Pipeline</h2>
 
 {% if not profile_summary.loaded %}
 <div class="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-4 mb-4 text-sm text-red-800 dark:text-red-300">
@@ -16,7 +16,7 @@
 
 {% include "partials/failed_applications_banner.html" %}
 
-<div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 mb-4">
+<div class="bg-white dark:bg-stone-900 rounded-xl p-4 shadow-sm border border-stone-100 dark:border-stone-800 mb-4">
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
     <div class="flex-1 min-w-[12rem]">
       {{ pipeline_health_bar(health) }}
@@ -25,14 +25,14 @@
       <form id="run-all-form" hx-post="/pipeline/run" hx-target="#pipeline-status" hx-swap="outerHTML">
         <input type="hidden" name="stages" value="crawl,enrich,embed,sync,prefilter,match,generate,export">
         <button type="button" onclick="confirmRunAll()" class="px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-opacity
-          {% if busy %}bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500{% else %}bg-brand text-white hover:opacity-90{% endif %}"
+          {% if busy %}bg-stone-100 text-stone-400 dark:bg-stone-800 dark:text-stone-500{% else %}bg-brand text-white hover:opacity-90{% endif %}"
           {% if busy %}disabled{% endif %}>Run all stages</button>
       </form>
       {% if busy %}<span class="text-sm text-blue-600 dark:text-blue-400 animate-pulse">Running…</span>{% endif %}
     </div>
   </div>
 
-  <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+  <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
     Crawl {{ readiness.jobs_new }} new · {{ readiness.jobs_needing_enrich }} need descriptions · {{ readiness.jobs_queued }} queued
   </p>
   {{ pipeline_flow(stages, busy=busy, clickable=true, target='#pipeline-status') }}
@@ -48,8 +48,8 @@ function confirmRunAll() {
 }
 </script>
 
-<div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
-  <h3 class="font-semibold mb-3 text-slate-900 dark:text-slate-100">Live log</h3>
+<div class="bg-white dark:bg-stone-900 rounded-xl p-4 shadow-sm border border-stone-100 dark:border-stone-800">
+  <h3 class="font-semibold mb-3 text-stone-900 dark:text-stone-100">Live log</h3>
   <div id="pipeline-status" hx-get="/partials/pipeline-status" hx-trigger="load{% if busy %}, every 2s{% endif %}" hx-swap="outerHTML">
     {% include "partials/pipeline_status.html" %}
   </div>

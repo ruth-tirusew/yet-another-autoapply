@@ -3,7 +3,7 @@
 {% block title %}Jobs — Job Crawler{% endblock %}
 {% block content %}
 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-  <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Jobs</h2>
+  <h2 class="text-2xl font-bold text-stone-900 dark:text-stone-100">Jobs</h2>
   <div class="flex flex-wrap gap-2 items-center">
     {% if matchable_new > 0 %}
     <form hx-post="/jobs/score" hx-target="#jobs-score-status" hx-swap="innerHTML" class="inline">
@@ -13,13 +13,13 @@
     </form>
     {% endif %}
     <form method="get" class="flex flex-wrap gap-2 items-center text-sm">
-    <select name="status" class="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800">
+    <select name="status" class="border border-stone-200 dark:border-stone-700 rounded-lg px-2 py-1 bg-white dark:bg-stone-800">
       <option value="">All statuses</option>
       {% for s in ['new','scored','queued','approved','needs_verification','applied','skipped','failed','stale'] %}
       <option value="{{ s }}" {% if filter_status == s %}selected{% endif %}>{{ s }}</option>
       {% endfor %}
     </select>
-    <input type="number" name="min_score" placeholder="Min score" value="{{ filter_min_score }}" class="w-24 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800">
+    <input type="number" name="min_score" placeholder="Min score" value="{{ filter_min_score }}" class="w-24 border border-stone-200 dark:border-stone-700 rounded-lg px-2 py-1 bg-white dark:bg-stone-800">
     <button type="submit" class="px-3 py-1 bg-brand text-white rounded-lg">Filter</button>
     </form>
     <form method="post" action="/jobs/clear" class="inline"
@@ -57,9 +57,9 @@
 {% endif %}
 
 {% if jobs %}
-<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+<div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-100 dark:border-stone-800 overflow-hidden">
   <table class="w-full text-sm">
-    <thead class="bg-slate-50 dark:bg-slate-800/50 text-left text-xs text-slate-500 uppercase">
+    <thead class="bg-stone-50 dark:bg-stone-800/50 text-left text-xs text-stone-500 uppercase">
       <tr>
         <th class="px-4 py-3">Title</th>
         <th class="px-4 py-3">Company</th>
@@ -68,11 +68,11 @@
         <th class="px-4 py-3">Status</th>
       </tr>
     </thead>
-    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+    <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
       {% for j in jobs %}
-      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+      <tr class="hover:bg-stone-50 dark:hover:bg-stone-800/30">
         <td class="px-4 py-3"><a href="/job/{{ j.id }}" class="text-brand hover:underline font-medium">{{ j.title or 'Untitled' }}</a></td>
-        <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{{ j.company or '—' }}</td>
+        <td class="px-4 py-3 text-stone-600 dark:text-stone-400">{{ j.company or '—' }}</td>
         <td class="px-4 py-3">{{ j.match_score|int if j.match_score is not none else '—' }}</td>
         <td class="px-4 py-3">{% if j.vector_score is not none %}{{ '%.2f'|format(j.vector_score) }}{% else %}—{% endif %}</td>
         <td class="px-4 py-3">{{ status_badge(j.status) }}</td>
@@ -82,8 +82,8 @@
   </table>
 </div>
 {% else %}
-<div class="bg-white dark:bg-slate-900 rounded-xl p-8 text-center border border-slate-100 dark:border-slate-800">
-  <p class="text-slate-500 dark:text-slate-400">No jobs yet. Run the pipeline from the <a href="/pipeline" class="text-brand hover:underline">Pipeline</a> page.</p>
+<div class="bg-white dark:bg-stone-900 rounded-xl p-8 text-center border border-stone-100 dark:border-stone-800">
+  <p class="text-stone-500 dark:text-stone-400">No jobs yet. Run the pipeline from the <a href="/pipeline" class="text-brand hover:underline">Pipeline</a> page.</p>
 </div>
 {% endif %}
 {% endblock %}

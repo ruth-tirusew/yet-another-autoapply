@@ -2,7 +2,7 @@
 {% block title %}{{ template.name }} — CV Templates{% endblock %}
 {% block content %}
 <div class="mb-4">
-  <a href="/templates" class="text-sm text-slate-500 dark:text-slate-400 hover:text-brand">← Templates</a>
+  <a href="/templates" class="text-sm text-stone-500 dark:text-stone-400 hover:text-brand">← Templates</a>
 </div>
 
 {% if request.query_params.get('saved') %}
@@ -10,17 +10,17 @@
 {% endif %}
 
 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-    <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4">{{ template.name }}</h2>
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-6 shadow-sm border border-stone-100 dark:border-stone-800">
+    <h2 class="text-xl font-bold text-stone-900 dark:text-stone-100 mb-4">{{ template.name }}</h2>
 
     {% if template.kind == 'builtin' %}
     <p class="text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg px-4 py-3 mb-4">
       Built-in templates are read-only. Duplicate to create an editable copy.
     </p>
     <form method="post" action="/templates/{{ template.slug }}/duplicate" class="mb-6">
-      <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Duplicate as</label>
+      <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Duplicate as</label>
       <div class="flex gap-2">
-        <input type="text" name="name" value="{{ template.name }} copy" class="flex-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm" required>
+        <input type="text" name="name" value="{{ template.name }} copy" class="flex-1 border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm" required>
         <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:opacity-90">Duplicate</button>
       </div>
     </form>
@@ -29,92 +29,92 @@
       <input type="hidden" name="sections_json" id="sections_json" value='{{ sections_json|e }}'>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Name</label>
-        <input type="text" name="name" value="{{ template.name }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Name</label>
+        <input type="text" name="name" value="{{ template.name }}" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Layout</label>
-        <select name="layout" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Layout</label>
+        <select name="layout" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
           <option value="single_column" {% if template.preset.layout == 'single_column' %}selected{% endif %}>Single column</option>
           <option value="compact" {% if template.preset.layout == 'compact' %}selected{% endif %}>Compact</option>
         </select>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Font family</label>
-        <input type="text" name="font_family" value="{{ template.preset.typography.font_family }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Font family</label>
+        <input type="text" name="font_family" value="{{ template.preset.typography.font_family }}" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Heading scale</label>
-          <select name="heading_scale" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Heading scale</label>
+          <select name="heading_scale" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
             {% for scale in ['default', 'compact', 'large'] %}
             <option value="{{ scale }}" {% if template.preset.typography.heading_scale == scale %}selected{% endif %}>{{ scale|title }}</option>
             {% endfor %}
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Body size</label>
-          <input type="text" name="body_size" value="{{ template.preset.typography.body_size }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Body size</label>
+          <input type="text" name="body_size" value="{{ template.preset.typography.body_size }}" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Text color</label>
-          <input type="color" name="color_text" value="{{ template.preset.colors.text }}" class="w-full h-10 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Text color</label>
+          <input type="color" name="color_text" value="{{ template.preset.colors.text }}" class="w-full h-10 border border-stone-200 dark:border-stone-700 rounded-lg">
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Heading color</label>
-          <input type="color" name="color_heading" value="{{ template.preset.colors.heading }}" class="w-full h-10 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Heading color</label>
+          <input type="color" name="color_heading" value="{{ template.preset.colors.heading }}" class="w-full h-10 border border-stone-200 dark:border-stone-700 rounded-lg">
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Accent color</label>
-          <input type="color" name="color_accent" value="{{ template.preset.colors.accent }}" class="w-full h-10 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Accent color</label>
+          <input type="color" name="color_accent" value="{{ template.preset.colors.accent }}" class="w-full h-10 border border-stone-200 dark:border-stone-700 rounded-lg">
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Border color</label>
-          <input type="color" name="color_border" value="{{ template.preset.colors.border }}" class="w-full h-10 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Border color</label>
+          <input type="color" name="color_border" value="{{ template.preset.colors.border }}" class="w-full h-10 border border-stone-200 dark:border-stone-700 rounded-lg">
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Page margin</label>
-          <input type="text" name="page_margin" value="{{ template.preset.page.margin }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Page margin</label>
+          <input type="text" name="page_margin" value="{{ template.preset.page.margin }}" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Max width</label>
-          <input type="text" name="page_max_width" value="{{ template.preset.page.max_width }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Max width</label>
+          <input type="text" name="page_max_width" value="{{ template.preset.page.max_width }}" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Skills style</label>
-        <select name="skills_style" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm">
+        <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Skills style</label>
+        <select name="skills_style" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-3 py-2 text-sm">
           <option value="inline" {% if template.preset.skills_style == 'inline' %}selected{% endif %}>Inline list</option>
           <option value="tags" {% if template.preset.skills_style == 'tags' %}selected{% endif %}>Tags</option>
         </select>
       </div>
 
       <div class="flex flex-wrap gap-4">
-        <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+        <label class="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-300">
           <input type="checkbox" name="show_profiles" {% if template.preset.show_profiles %}checked{% endif %} class="rounded">
           Show social profiles
         </label>
-        <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+        <label class="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-300">
           <input type="checkbox" name="print_optimized" {% if template.preset.print_optimized %}checked{% endif %} class="rounded">
           Print optimized
         </label>
       </div>
 
-      <fieldset class="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-        <legend class="text-sm font-medium text-slate-700 dark:text-slate-300 px-1">Sections</legend>
+      <fieldset class="border border-stone-200 dark:border-stone-700 rounded-lg p-4">
+        <legend class="text-sm font-medium text-stone-700 dark:text-stone-300 px-1">Sections</legend>
         <div class="space-y-2" id="sections-list">
           {% for section in template.preset.sections %}
-          <label class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+          <label class="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-300">
             <input type="checkbox" class="section-visible rounded" data-section-id="{{ section.id }}" {% if section.visible %}checked{% endif %}>
             {{ section.id|replace('_', ' ')|title }}
           </label>
@@ -132,10 +132,10 @@
     {% endif %}
   </div>
 
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-4 shadow-sm border border-stone-100 dark:border-stone-800">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="font-semibold text-slate-900 dark:text-slate-100">Live preview</h3>
-      <select id="preview-sample" class="text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg px-2 py-1">
+      <h3 class="font-semibold text-stone-900 dark:text-stone-100">Live preview</h3>
+      <select id="preview-sample" class="text-sm border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 rounded-lg px-2 py-1">
         <option value="profile">Profile resume</option>
         <option value="sample">Sample data</option>
       </select>
@@ -143,7 +143,7 @@
     <iframe
       id="template-preview"
       src="/templates/{{ template.slug }}/preview?sample=profile"
-      class="w-full border border-slate-200 dark:border-slate-700 rounded-lg bg-white"
+      class="w-full border border-stone-200 dark:border-stone-700 rounded-lg bg-white"
       style="height: 720px;"
       title="CV preview"
     ></iframe>

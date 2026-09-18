@@ -18,63 +18,63 @@
 {% endif %}
 
 {% if guide.summary %}
-<p class="text-sm text-slate-700 dark:text-slate-300 mb-6">{{ guide.summary }}</p>
+<p class="text-sm text-stone-700 dark:text-stone-300 mb-6">{{ guide.summary }}</p>
 {% endif %}
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-    <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-4">Improve your CV</h3>
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-6 border border-stone-100 dark:border-stone-800">
+    <h3 class="font-semibold text-stone-900 dark:text-stone-100 mb-4">Improve your CV</h3>
     {% if guide.cv_tips %}
     <ol class="space-y-4 text-sm">
       {% for tip in guide.cv_tips %}
       <li>
-        <p class="font-medium text-slate-900 dark:text-slate-100">{{ loop.index }}. {{ tip.title }}</p>
-        <p class="text-slate-600 dark:text-slate-400 mt-1">{{ tip.detail }}</p>
+        <p class="font-medium text-stone-900 dark:text-stone-100">{{ loop.index }}. {{ tip.title }}</p>
+        <p class="text-stone-600 dark:text-stone-400 mt-1">{{ tip.detail }}</p>
       </li>
       {% endfor %}
     </ol>
     {% else %}
-    <p class="text-sm text-slate-500 dark:text-slate-400">No CV tips in this guide.</p>
+    <p class="text-sm text-stone-500 dark:text-stone-400">No CV tips in this guide.</p>
     {% endif %}
   </div>
 
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-    <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-4">Improve your GitHub</h3>
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-6 border border-stone-100 dark:border-stone-800">
+    <h3 class="font-semibold text-stone-900 dark:text-stone-100 mb-4">Improve your GitHub</h3>
     {% if guide.github_tips %}
     <ol class="space-y-4 text-sm">
       {% for tip in guide.github_tips %}
       <li>
-        <p class="font-medium text-slate-900 dark:text-slate-100">{{ loop.index }}. {{ tip.title }}</p>
-        <p class="text-slate-600 dark:text-slate-400 mt-1">{{ tip.detail }}</p>
+        <p class="font-medium text-stone-900 dark:text-stone-100">{{ loop.index }}. {{ tip.title }}</p>
+        <p class="text-stone-600 dark:text-stone-400 mt-1">{{ tip.detail }}</p>
       </li>
       {% endfor %}
     </ol>
     {% else %}
-    <p class="text-sm text-slate-500 dark:text-slate-400">No GitHub tips in this guide.</p>
+    <p class="text-sm text-stone-500 dark:text-stone-400">No GitHub tips in this guide.</p>
     {% endif %}
   </div>
 
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-    <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-4">Open source to explore</h3>
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-6 border border-stone-100 dark:border-stone-800">
+    <h3 class="font-semibold text-stone-900 dark:text-stone-100 mb-4">Open source to explore</h3>
     {% if guide.oss_projects %}
     <ul class="space-y-4 text-sm">
       {% for proj in guide.oss_projects %}
-      <li class="border-b border-slate-100 dark:border-slate-800 pb-4 last:border-0 last:pb-0">
+      <li class="border-b border-stone-100 dark:border-stone-800 pb-4 last:border-0 last:pb-0">
         <a href="{{ proj.url }}" target="_blank" rel="noopener noreferrer" class="font-medium text-brand hover:underline">{{ proj.name }}</a>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">
           {% if proj.related_project and proj.related_project != 'general' %}
           Based on your project: {{ proj.related_project }}
           {% else %}
           General recommendation
           {% endif %}
         </p>
-        <p class="text-slate-600 dark:text-slate-400 mt-1">{{ proj.why }}</p>
-        <p class="text-slate-700 dark:text-slate-300 mt-2"><span class="font-medium">First step:</span> {{ proj.first_step }}</p>
+        <p class="text-stone-600 dark:text-stone-400 mt-1">{{ proj.why }}</p>
+        <p class="text-stone-700 dark:text-stone-300 mt-2"><span class="font-medium">First step:</span> {{ proj.first_step }}</p>
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p class="text-sm text-slate-500 dark:text-slate-400">No OSS suggestions in this guide.</p>
+    <p class="text-sm text-stone-500 dark:text-stone-400">No OSS suggestions in this guide.</p>
     {% endif %}
   </div>
 </div>
@@ -86,7 +86,7 @@
 {% endif %}
 
 {% if guide_generated_at %}
-<p class="text-xs text-slate-400 mt-4">
+<p class="text-xs text-stone-400 mt-4">
   Generated {{ guide_generated_at[:19].replace('T', ' ') }} UTC
   ·
   <button
@@ -102,7 +102,7 @@
 
 {% else %}
 <div class="text-center py-8">
-  <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+  <p class="text-sm text-stone-600 dark:text-stone-400 mb-4">
     Generate a personalized guide for your CV, GitHub profile, and open source contributions.
   </p>
   <button

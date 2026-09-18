@@ -1,6 +1,6 @@
-<div class="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
-  <h3 class="font-semibold text-slate-900 dark:text-slate-100 mb-2">Improved CV preview</h3>
-  <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+<div class="mt-8 pt-8 border-t border-stone-100 dark:border-stone-800">
+  <h3 class="font-semibold text-stone-900 dark:text-stone-100 mb-2">Improved CV preview</h3>
+  <p class="text-sm text-stone-600 dark:text-stone-400 mb-4">
     Generate a CV draft from the coaching tips above, preview it, then apply to replace your stored profile.
   </p>
 
@@ -53,7 +53,7 @@
   </div>
 
   {% if cv_draft_ready %}
-  <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+  <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-100 dark:border-stone-800 overflow-hidden">
     <iframe
       src="/coaching/cv-preview/html"
       title="Improved CV preview"
@@ -62,7 +62,7 @@
     </iframe>
   </div>
   {% if cv_draft_generated_at %}
-  <p class="text-xs text-slate-400 mt-2">Preview generated {{ cv_draft_generated_at[:19].replace('T', ' ') }} UTC</p>
+  <p class="text-xs text-stone-400 mt-2">Preview generated {{ cv_draft_generated_at[:19].replace('T', ' ') }} UTC</p>
   {% endif %}
   {% endif %}
 </div>

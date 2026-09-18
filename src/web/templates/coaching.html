@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Skills Coaching — Job Crawler{% endblock %}
 {% block content %}
-<h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">Skills Coaching</h2>
-<p class="text-sm text-slate-600 dark:text-slate-400 mb-8">Skill gaps from your matches and a personalized profile improvement guide.</p>
+<h2 class="text-2xl font-bold text-stone-900 dark:text-stone-100 mb-2">Skills Coaching</h2>
+<p class="text-sm text-stone-600 dark:text-stone-400 mb-8">Skill gaps from your matches and a personalized profile improvement guide.</p>
 
 <section class="mb-10">
-  <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Skill gaps</h3>
+  <h3 class="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-4">Skill gaps</h3>
 
   {% if not has_data %}
   <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 rounded-xl p-4 text-sm text-amber-800 dark:text-amber-300">
@@ -14,33 +14,33 @@
   {% else %}
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
+    <div class="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-100 dark:border-stone-800">
       <h4 class="font-semibold mb-3">Gap frequency</h4>
       <ul class="space-y-2 text-sm">
         {% for gap, count in gap_items %}
         <li class="flex items-center gap-2">
-          <div class="flex-1 truncate text-slate-700 dark:text-slate-300">{{ gap }}</div>
-          <div class="w-24 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div class="flex-1 truncate text-stone-700 dark:text-stone-300">{{ gap }}</div>
+          <div class="w-24 h-2 bg-stone-100 dark:bg-stone-800 rounded-full overflow-hidden">
             <div class="h-2 bg-brand rounded-full" style="width: {{ (count / gap_items[0][1] * 100)|int }}%"></div>
           </div>
-          <span class="text-xs text-slate-500 w-6 text-right">{{ count }}</span>
+          <span class="text-xs text-stone-500 w-6 text-right">{{ count }}</span>
         </li>
         {% endfor %}
       </ul>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
+    <div class="bg-white dark:bg-stone-900 rounded-xl p-4 border border-stone-100 dark:border-stone-800">
       <h4 class="font-semibold mb-3">Summary</h4>
-      <p class="text-sm text-slate-700 dark:text-slate-300">{{ report.summary }}</p>
+      <p class="text-sm text-stone-700 dark:text-stone-300">{{ report.summary }}</p>
       {% if report.learning_paths %}
       <h5 class="font-medium mt-4 mb-2 text-sm">Learning paths</h5>
-      <ul class="list-disc pl-4 text-sm space-y-1 text-slate-600 dark:text-slate-400">
+      <ul class="list-disc pl-4 text-sm space-y-1 text-stone-600 dark:text-stone-400">
         {% for p in report.learning_paths %}<li>{{ p }}</li>{% endfor %}
       </ul>
       {% endif %}
       {% if report.roles_unlocked %}
       <h5 class="font-medium mt-4 mb-2 text-sm">Roles unlocked</h5>
-      <ul class="list-disc pl-4 text-sm space-y-1 text-slate-600 dark:text-slate-400">
+      <ul class="list-disc pl-4 text-sm space-y-1 text-stone-600 dark:text-stone-400">
         {% for r in report.roles_unlocked %}<li>{{ r }}</li>{% endfor %}
       </ul>
       {% endif %}
@@ -50,7 +50,7 @@
 </section>
 
 <section>
-  <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">Profile guide</h3>
+  <h3 class="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-4">Profile guide</h3>
   <div id="profile-guide-panel">
     {% include "partials/profile_guide.html" %}
   </div>

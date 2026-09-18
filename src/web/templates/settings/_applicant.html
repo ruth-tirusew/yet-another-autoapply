@@ -1,5 +1,5 @@
 <form hx-post="/settings/save/applicant" hx-swap="none" class="space-y-3 max-w-lg">
-  <p class="text-xs text-slate-500 dark:text-slate-400">URL fields override contact links from your uploaded CV when set.</p>
+  <p class="text-xs text-stone-500 dark:text-stone-400">URL fields override contact links from your uploaded CV when set.</p>
   {% for field, label, input_type, placeholder in [
     ('name', 'Name', 'text', ''),
     ('email', 'Email', 'email', ''),
@@ -18,7 +18,7 @@
       name="{{ field }}"
       value="{{ applicant.get(field, '') }}"
       {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
-      class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm"
+      class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-2 text-sm"
     >
   </div>
   {% endfor %}

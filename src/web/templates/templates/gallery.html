@@ -3,27 +3,27 @@
 {% block content %}
 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
   <div>
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">CV Template Studio</h2>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Create and reuse layouts for tailored resumes.</p>
+    <h2 class="text-2xl font-bold text-stone-900 dark:text-stone-100">CV Template Studio</h2>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Create and reuse layouts for tailored resumes.</p>
   </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
   {% for tpl in templates %}
-  <div class="bg-white dark:bg-slate-900 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
+  <div class="bg-white dark:bg-stone-900 rounded-xl p-5 shadow-sm border border-stone-100 dark:border-stone-800 flex flex-col">
     <div class="flex items-start justify-between gap-2 mb-2">
-      <h3 class="font-semibold text-slate-900 dark:text-slate-100">{{ tpl.name }}</h3>
+      <h3 class="font-semibold text-stone-900 dark:text-stone-100">{{ tpl.name }}</h3>
       {% if tpl.is_default %}
       <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-brand/10 text-brand">Default</span>
       {% endif %}
     </div>
-    <p class="text-sm text-slate-500 dark:text-slate-400 flex-1">{{ tpl.description or 'Custom template' }}</p>
-    <p class="text-xs text-slate-400 mt-2 mb-4">
+    <p class="text-sm text-stone-500 dark:text-stone-400 flex-1">{{ tpl.description or 'Custom template' }}</p>
+    <p class="text-xs text-stone-400 mt-2 mb-4">
       {% if tpl.kind == 'builtin' %}Built-in{% else %}Custom{% endif %}
       · {{ tpl.preset.layout|replace('_', ' ') }}
     </p>
     <div class="flex flex-wrap gap-2 mt-auto">
-      <a href="/templates/{{ tpl.slug }}/edit" class="px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">Edit</a>
+      <a href="/templates/{{ tpl.slug }}/edit" class="px-3 py-1.5 text-sm border border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800">Edit</a>
       {% if not tpl.is_default %}
       <form method="post" action="/templates/{{ tpl.slug }}/default" class="inline">
         <button type="submit" class="px-3 py-1.5 text-sm border border-brand text-brand rounded-lg hover:bg-brand/5">Set default</button>
@@ -31,7 +31,7 @@
       {% endif %}
       <form method="post" action="/templates/{{ tpl.slug }}/duplicate" class="inline flex items-center gap-1">
         <input type="hidden" name="name" value="{{ tpl.name }} copy">
-        <button type="submit" class="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">Duplicate</button>
+        <button type="submit" class="px-3 py-1.5 text-sm text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100">Duplicate</button>
       </form>
       {% if tpl.kind != 'builtin' and not tpl.is_default %}
       <form method="post" action="/templates/{{ tpl.slug }}/delete" class="inline" onsubmit="return confirm('Delete this template?')">

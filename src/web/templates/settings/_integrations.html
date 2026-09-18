@@ -4,7 +4,7 @@
     <label class="flex items-center gap-2 text-sm">
       <input type="checkbox" name="ever_jobs_enabled" value="true" {% if ever_jobs.enabled %}checked{% endif %} class="rounded"> Enabled
     </label>
-    <input name="ever_jobs_api_url" value="{{ ever_jobs.api_url }}" placeholder="API URL" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    <input name="ever_jobs_api_url" value="{{ ever_jobs.api_url }}" placeholder="API URL" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-2 text-sm">
 
     <div class="space-y-2">
       <p class="text-sm font-medium">Search query</p>
@@ -21,16 +21,16 @@
       </label>
     </div>
 
-    <div id="search-query-preview" class="text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100"
+    <div id="search-query-preview" class="text-sm bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg px-3 py-2 text-stone-900 dark:text-stone-100"
       hx-get="/settings/preview/search-query" hx-trigger="load" hx-include="closest form">
       Loading preview…
     </div>
 
     <input name="ever_jobs_search_term" value="{{ ever_jobs.search_term or '' }}" placeholder="Manual search term"
-      class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm {% if mode != 'manual' %}hidden{% endif %}"
+      class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-2 text-sm {% if mode != 'manual' %}hidden{% endif %}"
       id="ever-jobs-manual-term">
 
-    <input type="number" name="ever_jobs_results_wanted" value="{{ ever_jobs.results_wanted }}" placeholder="Results wanted" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    <input type="number" name="ever_jobs_results_wanted" value="{{ ever_jobs.results_wanted }}" placeholder="Results wanted" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-2 text-sm">
   </fieldset>
 
   <fieldset class="space-y-3">
@@ -38,7 +38,7 @@
     <label class="flex items-center gap-2 text-sm">
       <input type="checkbox" name="scheduler_enabled" value="true" {% if scheduler.enabled %}checked{% endif %} class="rounded"> Enabled
     </label>
-    <input type="number" name="crawl_interval_hours" value="{{ scheduler.crawl_interval_hours }}" placeholder="Crawl interval (hours)" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    <input type="number" name="crawl_interval_hours" value="{{ scheduler.crawl_interval_hours }}" placeholder="Crawl interval (hours)" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-2 text-sm">
   </fieldset>
 
   <fieldset class="space-y-3">
@@ -46,7 +46,7 @@
     <label class="flex items-center gap-2 text-sm">
       <input type="checkbox" name="auto_enable_discovered" value="true" {% if source_discovery.auto_enable_discovered %}checked{% endif %} class="rounded"> Auto-enable discovered
     </label>
-    <input type="number" name="max_discovered" value="{{ source_discovery.max_discovered }}" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg px-3 py-2 text-sm">
+    <input type="number" name="max_discovered" value="{{ source_discovery.max_discovered }}" class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-lg px-3 py-2 text-sm">
   </fieldset>
 
   <button type="submit" class="px-4 py-2 bg-brand text-white rounded-lg text-sm">Save</button>
