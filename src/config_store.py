@@ -38,6 +38,7 @@ DEFAULT_COLLECTIONS: dict[str, Any] = {
         "crawl_delay_seconds": 1.5,
         "enrich_limit": 25,
         "match_limit": 10,
+        "match_workers": 4,
         "generate_limit": 5,
         "sync_limit": 500,
         "embed_limit": 200,
