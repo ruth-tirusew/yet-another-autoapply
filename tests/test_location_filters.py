@@ -73,6 +73,32 @@ class LocationParsingTests(unittest.TestCase):
         resume = {"basics": {"location": {"countryCode": "et"}}}
         self.assertEqual(candidate_country_code(resume), "ET")
 
+    def test_remote_region_expands_to_country_codes(self):
+        cases = {
+            "Remote (North America)": {"US", "CA", "MX"},
+            "Remote - EMEA": {"ET", "GB", "DE"},
+            "Remote (APAC)": {"IN", "AU", "JP"},
+        }
+        for loc, expected_subset in cases.items():
+            with self.subTest(location=loc):
+                parsed = parse_job_location(loc)
+                self.assertFalse(parsed.is_worldwide)
+                self.assertTrue(expected_subset.issubset(parsed.allowed_country_codes))
+
+    def test_ethiopian_candidate_matches_emea_remote(self):
+        parsed = parse_job_location("Remote (EMEA)")
+        ok, reason = candidate_matches_location(parsed, "ET")
+        self.assertTrue(ok)
+        self.assertEqual(reason, "")
+
+    def test_ethiopian_candidate_does_not_match_apac_or_north_america(self):
+        for loc in ("Remote (APAC)", "Remote (North America)", "Remote - Asia-Pacific"):
+            with self.subTest(location=loc):
+                parsed = parse_job_location(loc)
+                ok, reason = candidate_matches_location(parsed, "ET")
+                self.assertFalse(ok)
+                self.assertIn("Restricted", reason)
+
 
 if __name__ == "__main__":
     unittest.main()

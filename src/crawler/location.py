@@ -111,6 +111,39 @@ _COUNTRY_NAME_TO_CODE: dict[str, str] = {
 for _code in set(_COUNTRY_NAME_TO_CODE.values()):
     _COUNTRY_NAME_TO_CODE[_code.lower()] = _code
 
+# Continent/region names keyed to the set of country codes they expand to.
+# Only covers regions that show up in "Remote (<region>)" / "Remote - <region>"
+# postings; deliberately a subset of _COUNTRY_NAME_TO_CODE so every expanded
+# code is one we can already match against a candidate's country.
+_REGION_NAME_TO_CODES: dict[str, frozenset[str]] = {
+    "north america": frozenset({"US", "CA", "MX"}),
+    "latin america": frozenset(
+        {"MX", "BR", "AR", "CL", "CO", "PE", "EC", "BO", "PY", "UY", "CR", "GT", "HN", "NI", "PA", "DO", "SV"}
+    ),
+    "south america": frozenset({"BR", "AR", "CL", "CO", "PE", "EC", "BO", "PY", "UY"}),
+    "emea": frozenset(
+        {
+            # Europe
+            "AL", "AM", "AT", "BY", "BE", "BA", "BG", "HR", "CZ", "DK", "EE", "FI", "FR",
+            "GE", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "NL", "NO", "PL", "PT",
+            "RO", "RU", "RS", "SK", "SI", "ES", "SE", "CH", "UA", "GB", "EU",
+            # Middle East
+            "IL", "JO", "SA", "AE", "TR",
+            # Africa
+            "DZ", "EG", "ET", "GH", "KE", "MA", "NG", "ZA",
+        }
+    ),
+    "apac": frozenset(
+        {"AU", "BD", "KH", "CN", "IN", "ID", "JP", "MY", "NP", "NZ", "PK", "PH", "SG", "KR", "LK", "TW", "TH", "VN"}
+    ),
+    "asia pacific": frozenset(
+        {"AU", "BD", "KH", "CN", "IN", "ID", "JP", "MY", "NP", "NZ", "PK", "PH", "SG", "KR", "LK", "TW", "TH", "VN"}
+    ),
+    "asia-pacific": frozenset(
+        {"AU", "BD", "KH", "CN", "IN", "ID", "JP", "MY", "NP", "NZ", "PK", "PH", "SG", "KR", "LK", "TW", "TH", "VN"}
+    ),
+}
+
 _TRUE_WORLDWIDE_DEFAULTS = ("worldwide", "anywhere", "global", "international")
 _REMOTE_DASH_RE = re.compile(r"remote\s*[-–—]\s*([^;|]+)", re.IGNORECASE)
 _REMOTE_PAREN_RE = re.compile(r"remote\s*\(([^)]+)\)", re.IGNORECASE)
@@ -195,6 +228,11 @@ def _token_to_code(token: str) -> str | None:
 def _tokens_to_codes(text: str) -> set[str]:
     codes: set[str] = set()
     for part in _COUNTRY_SPLIT_RE.split(text):
+        normalized = _normalize_token(part)
+        region_codes = _REGION_NAME_TO_CODES.get(normalized)
+        if region_codes:
+            codes.update(region_codes)
+            continue
         code = _token_to_code(part)
         if code:
             codes.add(code)
