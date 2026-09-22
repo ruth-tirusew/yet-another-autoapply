@@ -153,8 +153,20 @@ class Retriever:
         if self._chunk_vectors:
             req_vectors = self._requirement_vectors(requirements, job_key)
             if req_vectors:
-                matrix = similarity_matrix(req_vectors, self._chunk_vectors)
-                self.backend = "vector"
+                try:
+                    matrix = similarity_matrix(req_vectors, self._chunk_vectors)
+                    self.backend = "vector"
+                except Exception as e:
+                    # Same contract as _load_chunk_vectors: retrieval quality
+                    # is an optimization, never a reason to fail a match. A
+                    # ragged vector set raises a bare ValueError out of numpy
+                    # rather than VectorDimensionMismatch, so this catches
+                    # broadly. Dropping the chunk vectors stops every later
+                    # job in the run from retrying what cannot recover mid-run.
+                    self.warning = f"Vector similarity failed, using lexical retrieval: {e}"
+                    logger.warning("[retrieval] %s", self.warning)
+                    self._chunk_vectors = None
+                    self.backend = "lexical"
             else:
                 self.backend = "lexical"
         if matrix is None:

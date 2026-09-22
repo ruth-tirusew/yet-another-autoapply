@@ -193,6 +193,7 @@ def _apply_context(job: dict, has_cv: bool) -> dict:
             "can_auto_apply": False,
             "can_retry_apply": False,
             "can_verify_apply": False,
+            "can_mark_applied": False,
             "apply_label": "Applied",
             "apply_blocked": "Already applied",
             "is_manual_apply": method == "generic",
@@ -204,6 +205,7 @@ def _apply_context(job: dict, has_cv: bool) -> dict:
             "can_auto_apply": False,
             "can_retry_apply": False,
             "can_verify_apply": method == "greenhouse",
+            "can_mark_applied": True,
             "apply_label": "Awaiting verification",
             "apply_blocked": None,
             "is_manual_apply": False,
@@ -215,6 +217,7 @@ def _apply_context(job: dict, has_cv: bool) -> dict:
             "can_auto_apply": False,
             "can_retry_apply": False,
             "can_verify_apply": False,
+            "can_mark_applied": True,
             "apply_label": "Apply now",
             "apply_blocked": "Generate materials first",
             "is_manual_apply": method == "generic",
@@ -226,6 +229,7 @@ def _apply_context(job: dict, has_cv: bool) -> dict:
             "can_auto_apply": False,
             "can_retry_apply": False,
             "can_verify_apply": False,
+            "can_mark_applied": True,
             "apply_label": "Apply on site",
             "apply_blocked": None,
             "is_manual_apply": True,
@@ -240,6 +244,7 @@ def _apply_context(job: dict, has_cv: bool) -> dict:
             "can_auto_apply": False,
             "can_retry_apply": False,
             "can_verify_apply": False,
+            "can_mark_applied": True,
             "apply_label": "Apply now",
             "apply_blocked": f"{method} auto-apply is disabled in settings",
             "is_manual_apply": False,
@@ -250,6 +255,7 @@ def _apply_context(job: dict, has_cv: bool) -> dict:
             "can_auto_apply": False,
             "can_retry_apply": False,
             "can_verify_apply": False,
+            "can_mark_applied": True,
             "apply_label": "Apply now",
             "apply_blocked": f"Cannot auto-apply to this {method} posting",
             "is_manual_apply": False,
@@ -260,6 +266,7 @@ def _apply_context(job: dict, has_cv: bool) -> dict:
         "can_auto_apply": True,
         "can_retry_apply": status == "failed",
         "can_verify_apply": False,
+        "can_mark_applied": True,
         "apply_label": "Retry apply" if status == "failed" else "Apply now",
         "apply_blocked": None,
         "is_manual_apply": False,
@@ -551,6 +558,22 @@ def reject_job(job_id: int):
 def skip_job(job_id: int):
     set_job_status(job_id, "skipped")
     return RedirectResponse("/applications", status_code=303)
+
+
+@router.post("/job/{job_id}/mark-applied")
+def mark_applied_job(job_id: int):
+    """Let the user record that they applied themselves — on the site
+    directly, by email, or any other way outside the auto-apply adapters —
+    without having to go through (or wait on) auto-apply."""
+    job = get_job(job_id)
+    if not job:
+        return HTMLResponse("Job not found", status_code=404)
+    if job.get("status") == "applied":
+        return RedirectResponse(f"/job/{job_id}", status_code=303)
+
+    set_job_status(job_id, "applied")
+    log_application_event(job_id, "applied_manually", {})
+    return RedirectResponse(f"/job/{job_id}", status_code=303)
 
 
 @router.post("/job/{job_id}/template")

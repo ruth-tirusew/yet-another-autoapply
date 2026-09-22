@@ -128,6 +128,46 @@ class PrefilterJobTests(TempDBTestCase):
         self.assertIsNotNone(score)
         self.assertGreater(score, 0.5)
 
+    def test_borderline_score_is_also_skipped_not_left_stuck_in_new(self):
+        """A score above the floor but below the LLM threshold used to leave
+        the job as "new" forever: get_jobs_by_status excludes anything
+        below vector_llm_min from every future match batch, so nothing
+        would ever revisit it — it just piled up, unresolved, at the front
+        of the "new" queue. It needs a terminal status, like the
+        below-vector_min case already gets."""
+        from src.catalog_db import update_catalog_job
+        from src.db import get_job, upsert_job
+        from src.prefilter import prefilter_job
+
+        # One chunk overlaps the resume's Python/Kubernetes experience
+        # (similarity 1.0), the other (frontend) doesn't (similarity 0.0)
+        # — a clean, predictable 0.5 average under the mocked embeddings.
+        half_overlap_job_id = upsert_job(
+            {
+                "title": "Backend Engineer",
+                "company": "Acme",
+                "url": "https://example.com/jobs/pf-half-overlap",
+                "description": "short",
+            },
+            source_id="test",
+            user_id=self.uid,
+        )
+        catalog_job_id = get_job(half_overlap_job_id, user_id=self.uid)["catalog_job_id"]
+        update_catalog_job(
+            catalog_job_id,
+            description_full="Requirements\n- 5+ years of Python experience\n\nNice to have\n- React and Figma design skills\n",
+        )
+
+        cfg = {"vector_prefilter_enabled": True, "vector_min_score": 0.3, "vector_llm_min_score": 0.75}
+        with mock.patch("src.matching.vectors.embed_texts", side_effect=_mock_embed), mock.patch(
+            "src.matching.prefilter._matching_cfg", return_value=cfg
+        ):
+            score = prefilter_job(half_overlap_job_id, user_id=self.uid)
+        job = get_job(half_overlap_job_id, user_id=self.uid)
+        self.assertAlmostEqual(score, 0.5)
+        self.assertEqual(job["status"], "skipped")
+        self.assertIn("LLM threshold", job["match_summary"])
+
     def test_low_score_marks_the_job_skipped(self):
         """A posting with no vocabulary overlap at all against the resume."""
         from src.catalog_db import update_catalog_job
@@ -197,7 +237,7 @@ class EmbedCatalogJobsTests(TempDBTestCase):
 
     def test_embed_stage_warms_the_cache_the_prefilter_later_reads(self):
         from src.embeddings import embed_catalog_jobs
-        from src.matching.vectors import get_cached, OWNER_REQUIREMENT
+        from src.matching.vectors import OWNER_REQUIREMENT, OWNER_ROLES, get_cached
         from src.matching.chunking import text_hash
 
         with mock.patch("src.matching.vectors.embed_texts", side_effect=_mock_embed) as embed:
@@ -212,9 +252,10 @@ class EmbedCatalogJobsTests(TempDBTestCase):
         from src.matching.vectors import embedding_settings
 
         _, model = embedding_settings(self.uid)
+        role = OWNER_ROLES[OWNER_REQUIREMENT]
         cached = get_cached(
             OWNER_REQUIREMENT,
-            [(f"{job_key}:{r.id}", text_hash(r.text)) for r in reqs],
+            [(f"{job_key}:{r.id}", f"{role}:{text_hash(r.text)}") for r in reqs],
             model,
         )
         self.assertEqual(len(cached), len(reqs), "embed stage must warm every posting-chunk vector")
@@ -255,3 +296,62 @@ class EmbedCatalogJobsTests(TempDBTestCase):
                 "SELECT embed_content_hash FROM catalog_jobs WHERE id = ?", (self.catalog_job_id,)
             ).fetchone()
         self.assertIsNone(row["embed_content_hash"])
+
+
+class VectorDimensionDriftTests(TempDBTestCase):
+    """An embedding model re-pulled under the same name with a different
+    output dimension must never yield a ragged mix of old- and new-dim
+    vectors, which numpy rejects and which used to abort a prefilter run."""
+
+    OWNER = "resume_chunk"
+
+    def _items(self, n: int):
+        return [(f"u1:chunk-{i}", f"hash-{i}", f"text {i}") for i in range(n)]
+
+    def test_mixed_dim_cache_is_discarded_rather_than_served(self):
+        from src.matching.vectors import get_cached, put_many
+
+        put_many(self.OWNER, [("u1:a", "document:h", [1.0] * 4)], "m", user_id=1)
+        put_many(self.OWNER, [("u1:b", "document:h", [1.0] * 8)], "m", user_id=1)
+
+        cached = get_cached(
+            self.OWNER, [("u1:a", "document:h"), ("u1:b", "document:h")], "m", user_id=1
+        )
+        self.assertEqual(cached, {}, "a dim disagreement must invalidate the whole batch")
+
+    def test_embed_with_cache_never_returns_mixed_dimensions(self):
+        from src.matching.vectors import embed_with_cache, put_many
+
+        items = self._items(3)
+        # Two rows cached at the old dim, one absent so the live model runs.
+        for oid, h, _ in items[:2]:
+            put_many(self.OWNER, [(oid, f"document:{h}", [1.0] * 4)], "m", user_id=1)
+
+        def fake_embed(texts, **kwargs):
+            return [[0.5] * 8 for _ in texts]  # model now returns 8 dims
+
+        with mock.patch("src.matching.vectors.embed_texts", side_effect=fake_embed):
+            out = embed_with_cache(self.OWNER, items, user_id=1, model="m")
+
+        self.assertEqual(
+            {len(v) for v in out.values()},
+            {8},
+            "stale-dim cached vectors must be dropped, not merged with fresh ones",
+        )
+
+    def test_cache_converges_on_the_new_dimension_next_run(self):
+        from src.matching.vectors import embed_with_cache, put_many
+
+        items = self._items(3)
+        for oid, h, _ in items[:2]:
+            put_many(self.OWNER, [(oid, f"document:{h}", [1.0] * 4)], "m", user_id=1)
+
+        def fake_embed(texts, **kwargs):
+            return [[0.5] * 8 for _ in texts]
+
+        with mock.patch("src.matching.vectors.embed_texts", side_effect=fake_embed):
+            embed_with_cache(self.OWNER, items, user_id=1, model="m")
+            second = embed_with_cache(self.OWNER, items, user_id=1, model="m")
+
+        self.assertEqual(len(second), len(items), "every item should be usable on the second run")
+        self.assertEqual({len(v) for v in second.values()}, {8})

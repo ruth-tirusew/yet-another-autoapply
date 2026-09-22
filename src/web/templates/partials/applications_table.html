@@ -34,6 +34,13 @@
           <input type="hidden" name="min_score" value="{{ filter_min_score }}">
           <button type="submit" class="px-2 py-1 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700">Retry</button>
         </form>
+        {% elif j.status in ('queued', 'scored', 'approved', 'needs_verification') %}
+        <form method="post" action="/applications/{{ j.id }}/mark-applied" class="inline">
+          <input type="hidden" name="tab" value="{{ filter_tab }}">
+          <input type="hidden" name="status" value="{{ filter_status }}">
+          <input type="hidden" name="min_score" value="{{ filter_min_score }}">
+          <button type="submit" class="px-2 py-1 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Mark applied</button>
+        </form>
         {% else %}
         <span class="text-stone-400 text-xs">—</span>
         {% endif %}

@@ -130,7 +130,7 @@ def reset_embeddings() -> dict[str, int]:
         scores = conn.execute(
             "UPDATE user_jobs SET vector_score = NULL WHERE vector_score IS NOT NULL"
         ).rowcount
-    vectors_purged = purge()
+    vectors_purged = purge(all_tenants=True)
     return {
         "profiles": profile,
         "catalog_jobs": catalog,

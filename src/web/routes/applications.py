@@ -8,7 +8,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
 from src.apply.dispatcher import retry_application, retry_failed_applications
-from src.db import count_jobs_by_status, list_applications
+from src.db import count_jobs_by_status, list_applications, log_application_event, set_job_status
 from src.web.deps import render
 
 router = APIRouter()
@@ -131,4 +131,23 @@ def retry_one_failed(
         status=status,
         min_score=min_score,
         retry_summary=message,
+    )
+
+
+@router.post("/applications/{job_id}/mark-applied")
+def mark_one_applied(
+    job_id: int,
+    tab: str = Form("active"),
+    status: str = Form(""),
+    min_score: str = Form(""),
+):
+    """Record a manual application from the tracker table, for someone who
+    applied on their own rather than waiting on (or instead of) auto-apply."""
+    set_job_status(job_id, "applied")
+    log_application_event(job_id, "applied_manually", {})
+    return _applications_redirect(
+        tab="history",
+        status=status if status in HISTORY_STATUSES else "",
+        min_score=min_score,
+        retry_summary=f"Job {job_id} marked as applied",
     )

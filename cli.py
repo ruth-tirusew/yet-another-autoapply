@@ -69,6 +69,10 @@ def main():
     reject.add_argument("job_id", type=int)
     skip = review_sub.add_parser("skip", help="Skip a job")
     skip.add_argument("job_id", type=int)
+    mark_applied = review_sub.add_parser(
+        "mark-applied", help="Record that you applied to a job yourself, outside auto-apply"
+    )
+    mark_applied.add_argument("job_id", type=int)
 
     apply_p = sub.add_parser("apply", help="Apply to a job")
     apply_p.add_argument("job_id", type=int)
@@ -320,6 +324,18 @@ def main():
 
             set_job_status(args.job_id, "skipped")
             print(f"Job {args.job_id} skipped")
+        elif args.review_cmd == "mark-applied":
+            from src.db import get_job, log_application_event, set_job_status
+
+            job = get_job(args.job_id)
+            if not job:
+                print(f"Job {args.job_id} not found")
+            elif job.get("status") == "applied":
+                print(f"Job {args.job_id} was already marked applied")
+            else:
+                set_job_status(args.job_id, "applied")
+                log_application_event(args.job_id, "applied_manually", {})
+                print(f"Job {args.job_id} marked as applied")
         else:
             review.print_help()
 
