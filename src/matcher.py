@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from src.ats import CategoryScore, JobMatchResult, LegacyMatchResponse, should_queue
@@ -68,11 +70,15 @@ def match_job(
     user_id: int | None = None,
     *,
     context_cache: dict[str, MatchContext] | None = None,
+    context_cache_lock: threading.Lock | None = None,
 ) -> JobMatchResult | None:
     """Score one job.
 
     ``context_cache`` lets a batch reuse the per-resume-variant match
     context (chunks, vectors, derived years/seniority) across jobs.
+    ``context_cache_lock`` guards it when jobs are matched concurrently
+    (e.g. from a thread pool) so two threads never build the same variant's
+    context twice.
     """
     uid = resolve_user_id(user_id)
     job = get_job(job_id, user_id=uid)
@@ -123,11 +129,17 @@ def match_job(
     if scoring_mode == "grounded":
         if context_cache is None:
             context = MatchContext.build(resume, user_id=uid, cfg=cfg)
-        else:
+        elif context_cache_lock is None:
             context = context_cache.get(resume_variant)
             if context is None:
                 context = MatchContext.build(resume, user_id=uid, cfg=cfg)
                 context_cache[resume_variant] = context
+        else:
+            with context_cache_lock:
+                context = context_cache.get(resume_variant)
+                if context is None:
+                    context = MatchContext.build(resume, user_id=uid, cfg=cfg)
+                    context_cache[resume_variant] = context
         result = grounded_match(job, resume, user_id=uid, cfg=cfg, context=context)
 
     if result is None and scoring_mode in ("rules", "hybrid"):
@@ -258,6 +270,7 @@ def match_all(
         require_description=True,
     )
     context_cache: dict[str, MatchContext] = {}
+    context_cache_lock = threading.Lock()
     stats = {
         "processed": 0,
         "scored": 0,
@@ -266,14 +279,17 @@ def match_all(
         "skipped_vector": 0,
         "errors": 0,
     }
+    stats_lock = threading.Lock()
     batch_size = len(jobs)
+    workers = max(1, int(cfg.get("pipeline", {}).get("match_workers", 4)))
 
     def _emit(msg: str) -> None:
         print(msg)
         if log_fn:
             log_fn(msg)
 
-    for index, job in enumerate(jobs, start=1):
+    to_match: list[dict[str, Any]] = []
+    for job in jobs:
         if prefilter_on:
             vs = job.get("vector_score")
             if vs is not None and vs < vector_llm_min:
@@ -282,25 +298,44 @@ def match_all(
         if not (job.get("description_full") or job.get("description_short")):
             stats["skipped_no_desc"] += 1
             continue
+        to_match.append(job)
+
+    def _match_one(index: int, job: dict[str, Any]) -> None:
         title = (job.get("title") or "Untitled")[:50]
-        _emit(f"  [match] {index}/{batch_size} job {job['id']}: {title}")
+        _emit(f"  [match] {index}/{len(to_match)} job {job['id']}: {title}")
         try:
-            match_job(job["id"], user_id=user_id, context_cache=context_cache)
+            match_job(
+                job["id"],
+                user_id=user_id,
+                context_cache=context_cache,
+                context_cache_lock=context_cache_lock,
+            )
             updated = get_job(job["id"], user_id=user_id)
             if not updated:
-                continue
-            stats["processed"] += 1
-            if updated.get("status") == "queued":
-                stats["queued"] += 1
-            elif updated.get("status") == "scored":
-                stats["scored"] += 1
+                return
+            with stats_lock:
+                stats["processed"] += 1
+                if updated.get("status") == "queued":
+                    stats["queued"] += 1
+                elif updated.get("status") == "scored":
+                    stats["scored"] += 1
         except Exception as e:
-            stats["errors"] += 1
+            with stats_lock:
+                stats["errors"] += 1
             try:
                 _record_match_failure(job["id"], resolve_user_id(user_id), str(e), cfg)
             except Exception:  # never let bookkeeping mask the original error
                 pass
             _emit(f"  [match] job {job['id']}: {e}")
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [
+            executor.submit(_match_one, index, job)
+            for index, job in enumerate(to_match, start=1)
+        ]
+        for future in as_completed(futures):
+            future.result()  # surface any bug the try/except above didn't catch
+
     _emit(
         f"  Matched {stats['processed']} jobs "
         f"({stats['scored']} scored, {stats['queued']} queued)"

@@ -164,6 +164,10 @@ def migrate_catalog_schema(conn) -> None:
             conn.execute(f"ALTER TABLE catalog_jobs ADD COLUMN {ddl}")
 
     # Model-tagged vector cache for resume chunks and posting requirements.
+    # user_id is NULL for owner kinds shared across tenants (e.g. posting
+    # requirements, cached once per catalog job) and set for tenant-owned
+    # rows (e.g. resume chunks) — see TENANT_SCOPED_OWNER_KINDS in
+    # src.matching.vectors.
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS vector_store (
@@ -173,13 +177,20 @@ def migrate_catalog_schema(conn) -> None:
             dim        INTEGER NOT NULL,
             text_hash  TEXT NOT NULL,
             vec        BLOB NOT NULL,
+            user_id    INTEGER,
             created_at TEXT NOT NULL,
             PRIMARY KEY (owner_kind, owner_id, model)
         )
         """
     )
+    vs_cols = {r[1] for r in conn.execute("PRAGMA table_info(vector_store)").fetchall()}
+    if "user_id" not in vs_cols:
+        conn.execute("ALTER TABLE vector_store ADD COLUMN user_id INTEGER")
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_vector_store_kind ON vector_store(owner_kind, model)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_vector_store_user ON vector_store(user_id)"
     )
 
     prof_cols = {r[1] for r in conn.execute("PRAGMA table_info(profile)").fetchall()}

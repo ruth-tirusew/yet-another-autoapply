@@ -171,15 +171,29 @@ def prefilter_job(
             {**event_meta, "reason": "below_vector_min"},
             user_id=uid,
         )
+    elif score < vector_llm_min:
+        # Above the floor but not strong enough to justify an LLM call. This
+        # used to leave the job as "new" indefinitely — get_jobs_by_status
+        # excludes anything below vector_llm_min from the match batch, so
+        # these jobs were never picked up again by anything, silently
+        # piling up at the front of the "new" queue forever. Skipping them
+        # here (like the below-vector_min case) gives them a terminal state
+        # instead of an unresolvable limbo.
+        update_job(
+            user_job_id,
+            user_id=uid,
+            vector_score=score,
+            status="skipped",
+            match_summary=f"SKIP — vector score {score:.2f} below LLM threshold {vector_llm_min}",
+        )
+        log_application_event(
+            user_job_id,
+            "prefilter_borderline",
+            {**event_meta, "reason": "below_llm_threshold", "llm_threshold": vector_llm_min},
+            user_id=uid,
+        )
     else:
         update_job(user_job_id, user_id=uid, vector_score=score)
-        if score < vector_llm_min:
-            log_application_event(
-                user_job_id,
-                "prefilter_borderline",
-                {**event_meta, "llm_threshold": vector_llm_min},
-                user_id=uid,
-            )
 
     return score
 

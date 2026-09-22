@@ -56,11 +56,22 @@ class GeminiProvider:
         parts = data["candidates"][0]["content"]["parts"]
         return "".join(p.get("text", "") for p in parts)
 
-    def embed(self, model: str, texts: list[str]) -> list[list[float]]:
-        """Embed a batch via the batchEmbedContents endpoint."""
+    def embed(self, model: str, texts: list[str], *, input_type: str = "document") -> list[list[float]]:
+        """Embed a batch via the batchEmbedContents endpoint.
+
+        ``input_type`` is ``"query"`` or ``"document"`` — passed through as
+        Gemini's ``taskType`` so the asymmetric retrieval models (e.g.
+        text-embedding-004) embed each side of a search appropriately
+        instead of identically.
+        """
+        task_type = "RETRIEVAL_QUERY" if input_type == "query" else "RETRIEVAL_DOCUMENT"
         requests_body = {
             "requests": [
-                {"model": f"models/{model}", "content": {"parts": [{"text": text}]}}
+                {
+                    "model": f"models/{model}",
+                    "content": {"parts": [{"text": text}]},
+                    "taskType": task_type,
+                }
                 for text in texts
             ]
         }

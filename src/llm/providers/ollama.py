@@ -8,6 +8,27 @@ from typing import Any
 from pydantic import BaseModel
 
 
+# mxbai-embed-large and nomic-embed-text are asymmetric retrieval models:
+# they were trained with different instruction prefixes for the query side
+# of a search versus the document side, and skipping the prefix costs real
+# retrieval quality. Matched by base name so a tagged pull (e.g.
+# "mxbai-embed-large:latest") still gets the right prefix.
+_QUERY_PREFIXES = {
+    "mxbai-embed-large": "Represent this sentence for searching relevant passages: ",
+    "nomic-embed-text": "search_query: ",
+}
+_DOCUMENT_PREFIXES = {
+    "nomic-embed-text": "search_document: ",
+}
+
+
+def _prefix_for(model: str, table: dict[str, str]) -> str:
+    for name, prefix in table.items():
+        if model == name or model.startswith(f"{name}:"):
+            return prefix
+    return ""
+
+
 class OllamaProvider:
     name = "ollama"
 
@@ -37,12 +58,19 @@ class OllamaProvider:
         response = ollama.chat(**kwargs)
         return response["message"]["content"]
 
-    def embed(self, model: str, texts: list[str]) -> list[list[float]]:
-        """Embed a batch of texts. Ollama accepts a list input and returns one vector each."""
+    def embed(self, model: str, texts: list[str], *, input_type: str = "document") -> list[list[float]]:
+        """Embed a batch of texts. Ollama accepts a list input and returns one vector each.
+
+        ``input_type`` is ``"query"`` or ``"document"`` — applies the
+        model's instruction prefix for that side of an asymmetric search,
+        when the model is known to use one.
+        """
         import ollama
 
         os.environ["OLLAMA_HOST"] = self.host
-        response = ollama.embed(model=model, input=list(texts))
+        prefix = _prefix_for(model, _QUERY_PREFIXES if input_type == "query" else _DOCUMENT_PREFIXES)
+        payload = [f"{prefix}{t}" for t in texts] if prefix else list(texts)
+        response = ollama.embed(model=model, input=payload)
         vectors = (
             response.get("embeddings")
             if isinstance(response, dict)

@@ -132,6 +132,48 @@ def test_approve_job_success_redirects_without_error_flag(auth_client):
     assert status == "approved"
 
 
+def test_mark_applied_sets_status_and_logs_event(auth_client):
+    from src.db import connect, get_application_events, upsert_job
+
+    upsert_job({"url": "https://example.com/job/1", "title": "Backend Engineer"}, user_id=1)
+
+    resp = auth_client.post("/job/1/mark-applied", follow_redirects=False)
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/job/1"
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT status, applied_at FROM user_jobs WHERE catalog_job_id=1"
+        ).fetchone()
+    assert row["status"] == "applied"
+    assert row["applied_at"]
+
+    events = [e["event_type"] for e in get_application_events(1)]
+    assert "applied_manually" in events
+
+
+def test_mark_applied_is_a_noop_once_already_applied(auth_client):
+    from src.db import connect, upsert_job
+
+    upsert_job({"url": "https://example.com/job/1", "title": "Backend Engineer"}, user_id=1)
+    auth_client.post("/job/1/mark-applied", follow_redirects=False)
+
+    with connect() as conn:
+        first_applied_at = conn.execute(
+            "SELECT applied_at FROM user_jobs WHERE catalog_job_id=1"
+        ).fetchone()["applied_at"]
+
+    resp = auth_client.post("/job/1/mark-applied", follow_redirects=False)
+    assert resp.status_code == 303
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT status, applied_at FROM user_jobs WHERE catalog_job_id=1"
+        ).fetchone()
+    assert row["status"] == "applied"
+    assert row["applied_at"] == first_applied_at
+
+
 def test_clear_jobs_wipes_queue_and_redirects_with_count(auth_client):
     from src.db import connect, upsert_job
 

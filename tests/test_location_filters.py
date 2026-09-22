@@ -20,6 +20,80 @@ class LocationParsingTests(unittest.TestCase):
                 self.assertIsNotNone(parsed.allowed_country_codes)
                 self.assertFalse(is_worldwide(loc))
 
+    def test_country_before_remote_not_worldwide(self):
+        """"<Country> - Remote" / "<Country> (Remote)" is at least as common
+        as "Remote - <Country>" on job boards, but was falling through to
+        is_worldwide=True — silently dropping the restriction."""
+        cases = {
+            "United States (Remote)": {"US"},
+            "United States - Remote": {"US"},
+            "Canada - Remote (ON, AB, BC, or NS Only)": {"CA"},
+            "Argentina - Remote": {"AR"},
+            "Delhi, India - Remote": {"IN"},
+        }
+        for loc, expected in cases.items():
+            with self.subTest(location=loc):
+                parsed = parse_job_location(loc)
+                self.assertFalse(parsed.is_worldwide)
+                self.assertEqual(parsed.allowed_country_codes, frozenset(expected))
+                self.assertFalse(is_worldwide(loc))
+
+    def test_is_job_eligible_blocks_country_before_remote(self):
+        job = {"location": "United States (Remote)", "description_full": ""}
+        ok, reason = is_job_eligible(job, {"basics": {"location": {"countryCode": "ET"}}})
+        self.assertFalse(ok)
+        self.assertIn("Restricted", reason)
+
+    def test_bare_remote_country_not_worldwide(self):
+        """"Remote <Country>" with no punctuation at all ("Remote US",
+        "Remote Canada", "Remote India", ...) is one of the most common
+        shapes on job boards and was still falling through to worldwide
+        even after the dash/paren fix above."""
+        cases = {
+            "Remote US": {"US"},
+            "Remote UK": {"GB"},
+            "Remote Canada": {"CA"},
+            "Remote Germany": {"DE"},
+            "Remote India": {"IN"},
+            "Ohio Remote": {"US"},
+            "Ukraine Anywhere": {"UA"},
+        }
+        for loc, expected in cases.items():
+            with self.subTest(location=loc):
+                parsed = parse_job_location(loc)
+                self.assertFalse(parsed.is_worldwide)
+                self.assertEqual(parsed.allowed_country_codes, frozenset(expected))
+
+    def test_bare_city_and_region_words_resolve(self):
+        """Bare cities from this catalog's own postings, and region words
+        like "Europe"/"LATAM" that aren't in the original EMEA-only region
+        table, should resolve instead of silently passing as worldwide."""
+        cases = {
+            "Milano (Remote)": {"IT"},
+            "Movable Ink - Toronto (Remote)": {"CA"},
+            "Krakow/Remote within Poland": {"PL"},
+            "Europe (Remote)": None,  # just assert non-worldwide + ET excluded below
+        }
+        for loc in cases:
+            with self.subTest(location=loc):
+                parsed = parse_job_location(loc)
+                self.assertFalse(parsed.is_worldwide)
+        # Ethiopia is EMEA but not part of the pure "Europe" region.
+        europe = parse_job_location("Europe (Remote)")
+        self.assertNotIn("ET", europe.allowed_country_codes)
+
+    def test_anywhere_with_explicit_country_is_restricted(self):
+        parsed = parse_job_location("Anywhere, USA")
+        self.assertFalse(parsed.is_worldwide)
+        self.assertEqual(parsed.allowed_country_codes, frozenset({"US"}))
+
+    def test_ambiguous_state_abbreviation_is_not_misread_as_a_country(self):
+        """"Chicago, IL or Remote" must not resolve IL to Israel — full
+        state names are safe to trust, bare two-letter ones next to a city
+        are not."""
+        parsed = parse_job_location("Chicago, IL or Remote")
+        self.assertIsNone(parsed.allowed_country_codes)
+
     def test_worldwide_remote_still_passes(self):
         for loc in ("Worldwide Remote", "Remote - Worldwide", "Anywhere"):
             with self.subTest(location=loc):

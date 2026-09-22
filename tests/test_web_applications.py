@@ -29,3 +29,19 @@ def test_retry_one_on_non_failed_job(auth_client):
     resp = auth_client.post("/applications/1/retry", follow_redirects=False)
     assert resp.status_code == 303
     assert "retry_summary=" in resp.headers["location"]
+
+
+def test_mark_applied_from_tracker_moves_to_history(auth_client):
+    from src.db import connect, get_application_events, upsert_job
+
+    upsert_job({"url": "https://example.com/job/1", "title": "Backend Engineer"}, user_id=1)
+    resp = auth_client.post("/applications/1/mark-applied", follow_redirects=False)
+    assert resp.status_code == 303
+    assert resp.headers["location"].startswith("/applications?tab=history")
+
+    with connect() as conn:
+        status = conn.execute(
+            "SELECT status FROM user_jobs WHERE catalog_job_id=1"
+        ).fetchone()["status"]
+    assert status == "applied"
+    assert "applied_manually" in [e["event_type"] for e in get_application_events(1)]
