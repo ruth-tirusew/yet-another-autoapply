@@ -15,6 +15,7 @@ class LeverAdapter(BaseAdapter):
         if not companies:
             return []
 
+        self.company_status: dict[str, bool] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -47,6 +48,7 @@ class LeverAdapter(BaseAdapter):
             if r.status_code != 200:
                 if not quiet:
                     print(f"  Lever ({display}): 0")
+                self.company_status[slug] = False
                 return []
             data = r.json()
             items = data if isinstance(data, list) else data.get("data", [])
@@ -80,12 +82,16 @@ class LeverAdapter(BaseAdapter):
                     date_posted=item.get("createdAt", ""),
                     description=clean(desc),
                     source_id=str(item.get("id", "")),
+                    source_tier="native",
+                    company_slug=slug,
                 )
                 if job:
                     jobs.append(job)
             time.sleep(0.5)
+            self.company_status[slug] = True
         except Exception as e:
             print(f"  [Lever/{slug}] {e}")
+            self.company_status[slug] = False
 
         if not quiet:
             print(f"  Lever ({display}): {len(jobs)}")

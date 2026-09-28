@@ -71,7 +71,15 @@
     <tbody class="divide-y divide-stone-100 dark:divide-stone-800">
       {% for j in jobs %}
       <tr class="hover:bg-stone-50 dark:hover:bg-stone-800/30">
-        <td class="px-4 py-3"><a href="/job/{{ j.id }}" class="text-brand hover:underline font-medium">{{ j.title or 'Untitled' }}</a></td>
+        <td class="px-4 py-3">
+          <a href="/job/{{ j.id }}" class="text-brand hover:underline font-medium">{{ j.title or 'Untitled' }}</a>
+          {% if j.possible_duplicates %}
+          <span title="{{ j.possible_duplicates }} other listing(s) share the same title, company, and location — may be the same posting or a separate open req. Not merged automatically; review individually."
+                class="ml-1 inline-block px-1.5 py-0.5 rounded text-xs bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900">
+            +{{ j.possible_duplicates }} similar
+          </span>
+          {% endif %}
+        </td>
         <td class="px-4 py-3 text-stone-600 dark:text-stone-400">{{ j.company or '—' }}</td>
         <td class="px-4 py-3">{{ j.match_score|int if j.match_score is not none else '—' }}</td>
         <td class="px-4 py-3">{% if j.vector_score is not none %}{{ '%.2f'|format(j.vector_score) }}{% else %}—{% endif %}</td>

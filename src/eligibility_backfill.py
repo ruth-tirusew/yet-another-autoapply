@@ -37,6 +37,7 @@ def recheck_eligibility(
             match_summary=f"SKIP — {reason}",
             match_details=json.dumps({"recommendation": "skip", "reason": reason}),
             status="skipped",
+            classified_by="eligibility",
         )
 
     return stats

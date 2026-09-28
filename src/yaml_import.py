@@ -26,6 +26,25 @@ def _load_yaml(path: Path) -> dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
+def _first_existing(*candidates: Path) -> Path:
+    """First path that exists, or the first candidate if none do.
+
+    ``import_yaml_to_db`` renames its input files to ``*.yaml.imported``
+    after a successful run so it never re-imports on top of live edits.
+    That rename makes the import a one-way door: once ``sources.yaml`` is
+    gone, any later reset of the *database* (a fresh clone, a wiped
+    ``jobs.db``) had nothing left to import from and silently fell back to
+    the single-source platform default, permanently losing every source
+    that wasn't the seeded default. Falling back to the ``.imported``
+    backup here means a DB reset can always recover the last-imported
+    source list, not just the bootstrap default.
+    """
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
 def _normalize_config_yaml(raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Map config.yaml top-level keys into collection rows."""
     collections: dict[str, dict[str, Any]] = {}
@@ -72,8 +91,14 @@ def import_yaml_to_db(*, rename_after: bool = True) -> dict[str, Any]:
     )
     summary: dict[str, Any] = {"collections": 0, "sources": 0, "users_seeded": 0}
 
-    config_path = settings.ROOT / "config.yaml"
-    sources_path = settings.ROOT / "config" / "sources.yaml"
+    config_path = _first_existing(
+        settings.ROOT / "config.yaml",
+        settings.ROOT / "config.yaml.imported",
+    )
+    sources_path = _first_existing(
+        settings.ROOT / "config" / "sources.yaml",
+        settings.ROOT / "config" / "sources.yaml.imported",
+    )
 
     if count_config_collections(SCOPE_PLATFORM, PLATFORM_SCOPE_ID) == 0:
         raw = _load_yaml(config_path)
@@ -101,9 +126,13 @@ def import_yaml_to_db(*, rename_after: bool = True) -> dict[str, Any]:
                 summary["users_seeded"] += 1
 
     if rename_after:
-        if config_path.exists():
+        # Only rename a *live* file — one whose name doesn't already end in
+        # ``.imported`` — into its backup form. Renaming an already-renamed
+        # backup here would double the suffix instead of leaving the backup
+        # (the DB-reset recovery path above) in place.
+        if config_path.exists() and config_path.suffix != ".imported":
             config_path.rename(config_path.with_suffix(".yaml.imported"))
-        if sources_path.exists():
+        if sources_path.exists() and sources_path.suffix != ".imported":
             sources_path.rename(sources_path.with_suffix(".yaml.imported"))
 
     return summary
@@ -116,8 +145,14 @@ def auto_import_if_empty() -> bool:
     if count_config_collections(SCOPE_PLATFORM, PLATFORM_SCOPE_ID) > 0:
         return False
 
-    config_path = settings.ROOT / "config.yaml"
-    sources_path = settings.ROOT / "config" / "sources.yaml"
+    config_path = _first_existing(
+        settings.ROOT / "config.yaml",
+        settings.ROOT / "config.yaml.imported",
+    )
+    sources_path = _first_existing(
+        settings.ROOT / "config" / "sources.yaml",
+        settings.ROOT / "config" / "sources.yaml.imported",
+    )
     if not config_path.exists() and not sources_path.exists():
         from src.config_store import seed_platform_defaults
 

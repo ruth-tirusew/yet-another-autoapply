@@ -163,6 +163,7 @@ def prefilter_job(
             user_id=uid,
             vector_score=score,
             status="skipped",
+            classified_by="vector_prefilter",
             match_summary=f"SKIP — vector score {score:.2f} below {vector_min}",
         )
         log_application_event(
@@ -184,6 +185,7 @@ def prefilter_job(
             user_id=uid,
             vector_score=score,
             status="skipped",
+            classified_by="vector_prefilter",
             match_summary=f"SKIP — vector score {score:.2f} below LLM threshold {vector_llm_min}",
         )
         log_application_event(

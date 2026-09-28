@@ -15,6 +15,7 @@ class WorkableAdapter(BaseAdapter):
         if not companies:
             return []
 
+        self.company_status: dict[str, bool] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -47,6 +48,7 @@ class WorkableAdapter(BaseAdapter):
             if r.status_code != 200:
                 if not quiet:
                     print(f"  Workable ({display}): 0")
+                self.company_status[slug] = False
                 return []
             for item in r.json().get("jobs", []):
                 title = item.get("title", "")
@@ -70,12 +72,16 @@ class WorkableAdapter(BaseAdapter):
                     date_posted=item.get("created_at", ""),
                     description=clean(item.get("description", "")),
                     source_id=str(item.get("shortcode", "")),
+                    source_tier="native",
+                    company_slug=slug,
                 )
                 if job:
                     jobs.append(job)
             time.sleep(0.5)
+            self.company_status[slug] = True
         except Exception as e:
             print(f"  [Workable/{slug}] {e}")
+            self.company_status[slug] = False
 
         if not quiet:
             print(f"  Workable ({display}): {len(jobs)}")

@@ -20,6 +20,7 @@ class SmartRecruitersAdapter(BaseAdapter):
         if not companies:
             return []
 
+        self.company_status: dict[str, bool] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -47,6 +48,11 @@ class SmartRecruitersAdapter(BaseAdapter):
 
     def _fetch_company(self, slug: str, display: str, *, quiet: bool = False) -> list[dict]:
         jobs: list[dict] = []
+        # Unlike the single-request adapters, a non-200 here can happen on
+        # page 2+ after earlier pages already succeeded — track success
+        # separately from "ran out of pages" (not content), which is a
+        # normal, successful end of the listing, not a failure.
+        ok = True
         try:
             offset = 0
             total_found = None
@@ -56,6 +62,7 @@ class SmartRecruitersAdapter(BaseAdapter):
                     params={"limit": PAGE_SIZE, "offset": offset},
                 )
                 if r.status_code != 200:
+                    ok = False
                     break
                 data = r.json()
                 content = data.get("content", [])
@@ -84,6 +91,8 @@ class SmartRecruitersAdapter(BaseAdapter):
                         date_posted=item.get("releasedDate", ""),
                         description="",
                         source_id=str(ref),
+                        source_tier="native",
+                        company_slug=slug,
                     )
                     if job:
                         jobs.append(job)
@@ -95,7 +104,9 @@ class SmartRecruitersAdapter(BaseAdapter):
                 time.sleep(0.5)
         except Exception as e:
             print(f"  [SmartRecruiters/{slug}] {e}")
+            ok = False
 
+        self.company_status[slug] = ok
         if not quiet:
             print(f"  SmartRecruiters ({display}): {len(jobs)}")
         elif jobs:

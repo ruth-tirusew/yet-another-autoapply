@@ -12,13 +12,21 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from src import settings
+from src.crawler.filters import normalize_url
 from src.settings import PROFILE_DIR, ensure_dirs, user_profile_dir
 from src.tenant import resolve_user_id
 from src.config_store import COLLECTION_NAMES, DEFAULT_COLLECTIONS, PLATFORM_SCOPE_ID, PLATFORM_SOURCES_USER_ID, SCOPE_PLATFORM, SCOPE_USER
 
 
 def url_hash(url: str) -> str:
-    return hashlib.sha256(url.strip().lower().encode()).hexdigest()
+    """Identity hash for a job URL, over its normalized form.
+
+    Two links that only differ by tracking params, a trailing slash, or
+    scheme/host casing must hash the same — otherwise a re-crawled or
+    re-shared link for a posting already in the catalog reads as a brand
+    new job instead of updating the existing row.
+    """
+    return hashlib.sha256(normalize_url(url).encode()).hexdigest()
 
 
 def _uid(user_id: int | None = None) -> int:
@@ -1148,9 +1156,11 @@ def update_job(job_id: int, user_id: int | None = None, **fields: Any) -> None:
                 )
 
 
-def set_job_status(job_id: int, status: str, user_id: int | None = None) -> None:
+def set_job_status(
+    job_id: int, status: str, user_id: int | None = None, *, classified_by: str = "user"
+) -> None:
     old = get_job(job_id, user_id)
-    fields: dict[str, Any] = {"status": status}
+    fields: dict[str, Any] = {"status": status, "classified_by": classified_by}
     if status == "applied":
         fields["applied_at"] = datetime.utcnow().isoformat()
     update_job(job_id, user_id, **fields)

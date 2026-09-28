@@ -15,6 +15,13 @@ class GreenhouseAdapter(BaseAdapter):
         if not companies:
             return []
 
+        # Per-slug fetch outcome (True = fetched successfully, even if 0
+        # jobs; False = the request failed) — set by _fetch_company. Lets a
+        # caller (TargetCompaniesAdapter) tell "this company genuinely has
+        # no open roles right now" apart from "the fetch failed", which
+        # matters for deciding whether it's safe to mark any of that
+        # company's previously-seen jobs as closed.
+        self.company_status: dict[str, bool] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -47,6 +54,7 @@ class GreenhouseAdapter(BaseAdapter):
             if r.status_code != 200:
                 if not quiet:
                     print(f"  Greenhouse ({display}): 0")
+                self.company_status[slug] = False
                 return []
             for item in r.json().get("jobs", []):
                 title = item.get("title", "")
@@ -64,12 +72,16 @@ class GreenhouseAdapter(BaseAdapter):
                     date_posted=item.get("updated_at", ""),
                     description=clean(item.get("content", "")),
                     source_id=str(item.get("id", "")),
+                    source_tier="native",
+                    company_slug=slug,
                 )
                 if job:
                     jobs.append(job)
             time.sleep(0.5)
+            self.company_status[slug] = True
         except Exception as e:
             print(f"  [Greenhouse/{slug}] {e}")
+            self.company_status[slug] = False
 
         if not quiet:
             print(f"  Greenhouse ({display}): {len(jobs)}")

@@ -13,11 +13,11 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
+from src.catalog_db import get_catalog_url_hashes, touch_catalog_last_seen
 from src.crawler.adapters.base import BaseAdapter
 from src.crawler.filters import is_relevant, normalize_job
 from src.crawler.http import get
-from src.db import get_existing_url_hashes, url_hash
-from src.tenant import resolve_user_id
+from src.db import url_hash
 
 DEFAULT_BASE_URL = "https://feashliaa.github.io/job-board-data/data/chunks"
 
@@ -53,8 +53,15 @@ class JobBoardAggregatorAdapter(BaseAdapter):
         max_jobs = int(self.config.get("max_jobs", 500))
         chunk_rotation = self.config.get("chunk_rotation", True)
         skip_existing = self.config.get("skip_existing", True)
-        existing_hashes = get_existing_url_hashes(resolve_user_id()) if skip_existing else set()
+        # Catalog-wide, not scoped to one user's synced queue: this is a
+        # "has the crawl already ingested this URL" check, independent of
+        # whether any particular user has it in their per-user job list yet.
+        existing_hashes = get_catalog_url_hashes() if skip_existing else set()
         skipped_existing = 0
+        # skip_existing keeps an already-known URL out of `jobs`, so it
+        # never reaches upsert_job and its last_seen would otherwise freeze
+        # at whenever it was first crawled — see touch_catalog_last_seen.
+        still_listed_hashes: set[str] = set()
 
         try:
             manifest = get(f"{base_url}/jobs_manifest.json", timeout=30).json()
@@ -98,6 +105,7 @@ class JobBoardAggregatorAdapter(BaseAdapter):
                 uh = url_hash(url)
                 if skip_existing and uh in existing_hashes:
                     skipped_existing += 1
+                    still_listed_hashes.add(uh)
                     continue
                 if url in seen:
                     continue
@@ -107,6 +115,9 @@ class JobBoardAggregatorAdapter(BaseAdapter):
                     existing_hashes.add(uh)
 
             time.sleep(0.5)
+
+        if still_listed_hashes:
+            touch_catalog_last_seen(list(still_listed_hashes))
 
         suffix = f", {skipped_existing} already in DB" if skipped_existing else ""
         print(f"  {label}: {len(jobs)} new (from {len(selected)}/{len(chunks)} chunks{suffix})")

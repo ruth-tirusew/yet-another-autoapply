@@ -10,6 +10,7 @@ from src.crawler.adapters.greenhouse import GreenhouseAdapter
 from src.crawler.adapters.lever import LeverAdapter
 from src.crawler.adapters.smartrecruiters import SmartRecruitersAdapter
 from src.crawler.adapters.workable import WorkableAdapter
+from src.catalog_db import expire_missing_catalog_jobs
 from src.db import connect
 from src.tenant import resolve_user_id
 
@@ -47,6 +48,17 @@ class TargetCompaniesAdapter(BaseAdapter):
             for job in fetched:
                 job["source"] = f"Target: {co.get('display_name') or co['company_slug']}"
             jobs.extend(fetched)
+
+            # Only a *confirmed successful* fetch of this company's full
+            # current listing may expire anything — see
+            # expire_missing_catalog_jobs. company_status[slug] is absent
+            # entirely if _company_entries() never even tried this slug.
+            slug = co["company_slug"]
+            if getattr(adapter, "company_status", {}).get(slug):
+                current_urls = {j["url"] for j in fetched}
+                expired = expire_missing_catalog_jobs(ats, slug, current_urls)
+                if expired:
+                    print(f"  Target {slug}: {expired} job(s) no longer listed, marked expired")
         print(f"  Target companies: {len(jobs)}")
         return jobs
 

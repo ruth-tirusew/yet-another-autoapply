@@ -98,7 +98,7 @@ def _fetch_otp_for_job(job_id: int) -> str | None:
 
 
 def _finalize_apply_result(job_id: int, result: ApplyResult, app: dict) -> dict:
-    set_job_status(job_id, _status_for_result(result))
+    set_job_status(job_id, _status_for_result(result), classified_by="apply_dispatcher")
     log_application_event(
         job_id,
         _event_for_result(result),

@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from src.ats import CategoryScore, JobMatchResult, LegacyMatchResponse, should_queue
+from src.catalog_db import sync_target_company_watchlist
 from src.config import get_config
 from src.crawler.filters import candidate_country_code, is_job_eligible, parse_job_location
 from src.crawler.location import candidate_matches_location
@@ -52,6 +53,7 @@ def _record_match_failure(job_id: int, uid: int, error: str, cfg: dict[str, Any]
     }
     if attempts >= max_attempts:
         fields["status"] = "skipped"
+        fields["classified_by"] = "match_error"
         fields["match_summary"] = f"SKIP — scoring failed {attempts} times: {error}"[:500]
     else:
         fields["status"] = "new"
@@ -101,6 +103,7 @@ def match_job(
             match_summary=f"SKIP — {reason}",
             match_details=json.dumps({"recommendation": "skip", "reason": reason}),
             status="skipped",
+            classified_by="eligibility",
         )
         return None
 
@@ -233,6 +236,7 @@ def match_job(
         match_summary=summary,
         match_details=json.dumps(result.model_dump()),
         status=status,
+        classified_by=result.engine,
     )
     log_application_event(
         job_id,
@@ -344,6 +348,20 @@ def match_all(
         _emit(f"  Skipped {stats['skipped_no_desc']} without descriptions")
     if stats["skipped_vector"]:
         _emit(f"  Skipped {stats['skipped_vector']} below vector threshold")
+
+    if stats["processed"]:
+        watchlist = sync_target_company_watchlist(
+            resolve_user_id(user_id),
+            threshold=int(cfg.get("match_threshold", 70)),
+            auto_max=int(matching.get("auto_target_max", 50)),
+            auto_prune_days=int(matching.get("auto_target_prune_days", 60)),
+        )
+        if watchlist["added"] or watchlist["pruned"]:
+            _emit(
+                f"  Target watchlist: +{watchlist['added']} auto-added, "
+                f"-{watchlist['pruned']} auto-pruned"
+            )
+
     return stats
 
 

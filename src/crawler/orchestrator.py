@@ -6,16 +6,42 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
+from src.catalog_db import list_target_companies
 from src.config import get_config
 from src.config_store import PLATFORM_SOURCES_USER_ID, list_sources
 from src.crawler.registry import get_adapter
-from src.db import init_db, mark_stale_jobs, upsert_job, upsert_source_registry
+from src.db import init_db, list_user_ids, mark_stale_jobs, upsert_job, upsert_source_registry
+
+
+def _target_company_sources() -> list[dict[str, Any]]:
+    """One synthetic source per user with an enabled target company.
+
+    TargetCompaniesAdapter is registered in the adapter registry but was
+    never actually added to any source list — a user could add companies
+    on the Targets page and nothing would ever crawl them. This is what
+    wires it into the real crawl. The resulting jobs still land in the one
+    shared catalog like any other source, per-user selection just decides
+    which companies get fetched at all.
+    """
+    sources = []
+    for uid in list_user_ids():
+        companies = [c for c in list_target_companies(uid) if c.get("enabled", True)]
+        if not companies:
+            continue
+        sources.append({
+            "id": f"target-companies-user-{uid}",
+            "name": f"Target companies (user {uid})",
+            "adapter": "target_companies",
+            "config": {"user_id": uid},
+        })
+    return sources
 
 
 def crawl_all(persist: bool = True, user_id: int | None = None) -> list[dict]:
     init_db()
     cfg = get_config()
     sources = [s for s in list_sources(PLATFORM_SOURCES_USER_ID) if s.get("enabled", True)]
+    sources += _target_company_sources()
     all_jobs: list[dict] = []
     seen_urls: set[str] = set()
     platform_uid = PLATFORM_SOURCES_USER_ID

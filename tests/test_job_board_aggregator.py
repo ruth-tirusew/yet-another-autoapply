@@ -84,7 +84,7 @@ class JobBoardAggregatorTests(unittest.TestCase):
         chunk_resp.content = payload
 
         with patch("src.crawler.adapters.job_board_aggregator.get") as mock_get, patch(
-            "src.crawler.adapters.job_board_aggregator.get_existing_url_hashes",
+            "src.crawler.adapters.job_board_aggregator.get_catalog_url_hashes",
             return_value=set(),
         ):
             mock_get.side_effect = [manifest_resp, chunk_resp]
@@ -113,7 +113,7 @@ class JobBoardAggregatorTests(unittest.TestCase):
         chunk_resp.content = payload
 
         with patch("src.crawler.adapters.job_board_aggregator.get") as mock_get, patch(
-            "src.crawler.adapters.job_board_aggregator.get_existing_url_hashes",
+            "src.crawler.adapters.job_board_aggregator.get_catalog_url_hashes",
             return_value=set(),
         ):
             mock_get.side_effect = [manifest_resp, chunk_resp]
@@ -141,13 +141,35 @@ class JobBoardAggregatorTests(unittest.TestCase):
         chunk_resp.content = payload
 
         with patch("src.crawler.adapters.job_board_aggregator.get") as mock_get, patch(
-            "src.crawler.adapters.job_board_aggregator.get_existing_url_hashes",
+            "src.crawler.adapters.job_board_aggregator.get_catalog_url_hashes",
             return_value=existing,
-        ):
+        ), patch(
+            "src.crawler.adapters.job_board_aggregator.touch_catalog_last_seen"
+        ) as mock_touch:
             mock_get.side_effect = [manifest_resp, chunk_resp]
             jobs = adapter.fetch()
 
         self.assertEqual(jobs, [])
+        # The skipped-but-still-listed job's last_seen must still get
+        # bumped, or it silently goes stale after stale_job_days even
+        # though the board keeps listing it every crawl.
+        mock_touch.assert_called_once()
+        self.assertEqual(set(mock_touch.call_args[0][0]), existing)
+
+    def test_skip_existing_checks_the_catalog_not_one_users_synced_queue(self):
+        """Regression: skip_existing used to call get_existing_url_hashes(),
+        which is scoped to one user's synced user_jobs rows (defaulting to
+        user 1 via resolve_user_id() with no tenant in context, since the
+        platform crawl runs outside any per-request tenant). A URL already
+        upserted into the shared catalog but not yet synced to that one
+        user's queue would then read as "not existing" and get re-fetched
+        and re-processed every crawl. The adapter must ask a catalog-wide
+        source (get_catalog_url_hashes), independent of any user's queue.
+        """
+        from src.crawler.adapters import job_board_aggregator as mod
+
+        self.assertIn("get_catalog_url_hashes", dir(mod))
+        self.assertNotIn("get_existing_url_hashes", dir(mod))
 
 
 if __name__ == "__main__":

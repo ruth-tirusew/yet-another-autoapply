@@ -15,6 +15,7 @@ class AshbyAdapter(BaseAdapter):
         if not companies:
             return []
 
+        self.company_status: dict[str, bool] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -47,6 +48,7 @@ class AshbyAdapter(BaseAdapter):
             if r.status_code != 200:
                 if not quiet:
                     print(f"  Ashby ({display}): 0")
+                self.company_status[slug] = False
                 return []
             for item in r.json().get("jobs", []):
                 title = item.get("title", "")
@@ -66,12 +68,16 @@ class AshbyAdapter(BaseAdapter):
                     date_posted=item.get("publishedAt", ""),
                     description=clean(item.get("descriptionPlain", "") or item.get("description", "")),
                     source_id=str(item.get("id", "")),
+                    source_tier="native",
+                    company_slug=slug,
                 )
                 if job:
                     jobs.append(job)
             time.sleep(0.5)
+            self.company_status[slug] = True
         except Exception as e:
             print(f"  [Ashby/{slug}] {e}")
+            self.company_status[slug] = False
 
         if not quiet:
             print(f"  Ashby ({display}): {len(jobs)}")
