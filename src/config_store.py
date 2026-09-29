@@ -127,7 +127,12 @@ DEFAULT_COLLECTIONS: dict[str, Any] = {
         },
     },
     "cover_letter": {"max_words": 350, "tone": "concise"},
-    "hiring_agent": {"evaluate_on_upload": True},
+    "hiring_agent": {
+        "evaluate_on_upload": True,
+        # Role the profile grader calibrates to; empty falls back to the
+        # resume's own headline (basics.label).
+        "target_role": "",
+    },
     "ever_jobs": {
         "enabled": False,
         "api_url": "http://localhost:3001",

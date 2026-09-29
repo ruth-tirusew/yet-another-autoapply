@@ -34,6 +34,19 @@ class TargetCompanySourcesTests(TempDBTestCase):
         self.assertEqual(len(sources), 1)
         self.assertEqual(sources[0]["adapter"], "target_companies")
         self.assertEqual(sources[0]["config"]["user_id"], uid)
+        self.assertIs(sources[0]["config"]["persist"], True)
+
+    def test_persist_flag_is_threaded_into_each_source_config(self):
+        from src.catalog_db import add_target_company
+        from src.crawler.orchestrator import _target_company_sources
+        from src.db import create_user
+
+        uid = create_user("dryrun@test.com", display_name="R")["id"]
+        add_target_company(uid, "acme", "greenhouse")
+
+        sources = _target_company_sources(persist=False)
+        self.assertEqual(len(sources), 1)
+        self.assertIs(sources[0]["config"]["persist"], False)
 
     def test_disabled_only_company_produces_no_source(self):
         from src.catalog_db import add_target_company, toggle_target_company, list_target_companies

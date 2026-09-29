@@ -2,7 +2,7 @@
 <div id="profile-upload-status"
   {% if status == "uploading" %}
   hx-get="/partials/profile-upload-status"
-  hx-trigger="load, every 2s"
+  hx-trigger="load, every 5s [document.visibilityState==='visible']"
   hx-swap="outerHTML"
   {% endif %}
   class="rounded-xl p-4 mb-4 text-sm

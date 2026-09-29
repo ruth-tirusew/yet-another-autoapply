@@ -16,6 +16,9 @@ class AshbyAdapter(BaseAdapter):
             return []
 
         self.company_status: dict[str, bool] = {}
+        # See GreenhouseAdapter.company_urls for why this tracks the full,
+        # pre-filter listing rather than just the jobs kept for matching.
+        self.company_urls: dict[str, set[str]] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -52,6 +55,9 @@ class AshbyAdapter(BaseAdapter):
                 return []
             for item in r.json().get("jobs", []):
                 title = item.get("title", "")
+                url = item.get("jobUrl") or item.get("applyUrl", "")
+                if url:
+                    self.company_urls.setdefault(slug, set()).add(url)
                 if not is_relevant(title):
                     continue
                 loc = item.get("location", "") or "Remote"
@@ -63,7 +69,7 @@ class AshbyAdapter(BaseAdapter):
                     source=f"Ashby ({display})",
                     title=title,
                     company=display,
-                    url=item.get("jobUrl") or item.get("applyUrl", ""),
+                    url=url,
                     location=loc,
                     date_posted=item.get("publishedAt", ""),
                     description=clean(item.get("descriptionPlain", "") or item.get("description", "")),

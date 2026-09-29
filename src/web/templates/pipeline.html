@@ -50,7 +50,7 @@ function confirmRunAll() {
 
 <div class="bg-white dark:bg-stone-900 rounded-xl p-4 shadow-sm border border-stone-100 dark:border-stone-800">
   <h3 class="font-semibold mb-3 text-stone-900 dark:text-stone-100">Live log</h3>
-  <div id="pipeline-status" hx-get="/partials/pipeline-status" hx-trigger="load{% if busy %}, every 2s{% endif %}" hx-swap="outerHTML">
+  <div id="pipeline-status" hx-get="/partials/pipeline-status" hx-trigger="load" hx-swap="outerHTML">
     {% include "partials/pipeline_status.html" %}
   </div>
 </div>

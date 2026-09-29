@@ -17,7 +17,12 @@ logger = logging.getLogger(__name__)
 
 
 class ResumeEvaluator:
-    def __init__(self, model_name: str = DEFAULT_MODEL, model_params: dict = None):
+    def __init__(
+        self,
+        model_name: str = DEFAULT_MODEL,
+        model_params: dict = None,
+        target_role: str = "",
+    ):
         if not model_name:
             raise ValueError("Model name cannot be empty")
 
@@ -25,6 +30,7 @@ class ResumeEvaluator:
         self.model_params = model_params or MODEL_PARAMETERS.get(
             model_name, {"temperature": 0.5, "top_p": 0.9}
         )
+        self.target_role = target_role
         self.template_manager = TemplateManager()
         self._initialize_llm_provider()
 
@@ -34,7 +40,9 @@ class ResumeEvaluator:
 
     def _load_evaluation_prompt(self, resume_text: str) -> str:
         criteria_template = self.template_manager.render_template(
-            "resume_evaluation_criteria", text_content=resume_text
+            "resume_evaluation_criteria",
+            text_content=resume_text,
+            target_role=self.target_role,
         )
         if criteria_template is None:
             raise ValueError("Failed to load resume evaluation criteria template")

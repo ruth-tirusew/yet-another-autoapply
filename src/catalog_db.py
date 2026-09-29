@@ -16,6 +16,14 @@ from src.tenant import resolve_user_id
 # when batching an IN (...) clause over an arbitrary number of hashes.
 _SQLITE_IN_BATCH = 400
 
+# user_jobs statuses a posting closing (mark_catalog_stale / expire_missing_
+# catalog_jobs) is allowed to demote to 'stale'. Deliberately excludes
+# 'needs_verification' (an apply attempt is actively in flight — yanking the
+# job out from under it would strand that flow) and every terminal status
+# ('applied', 'rejected', 'skipped', 'failed', already-'stale') — a real
+# outcome must never be overwritten just because the posting later closed.
+_STALE_DEMOTABLE_STATUSES = ("new", "scored", "approved", "queued")
+
 CATALOG_FIELDS = frozenset({
     "source", "source_id", "title", "company", "location", "salary", "tags",
     "date_posted", "url", "description_short", "description_full", "ats_type",
@@ -192,8 +200,12 @@ def migrate_catalog_schema(conn) -> None:
         # (an automated application attempt's outcome), "match_error"
         # (retired after repeated scoring failures), "duplicate_of_resolved"
         # (inherited a decision already made on a same-fingerprint posting —
-        # see scripts/repair_catalog_data.py), or NULL for a row that
-        # predates this column (status was set, but by what is unrecorded).
+        # see scripts/repair_catalog_data.py), "closed" (demoted to 'stale'
+        # because a confirmed native re-crawl found the posting gone — see
+        # expire_missing_catalog_jobs), "stale_timeout" (demoted to 'stale'
+        # by last_seen aging out with no such confirmation — see
+        # mark_catalog_stale), or NULL for a row that predates this column
+        # (status was set, but by what is unrecorded).
         conn.execute("ALTER TABLE user_jobs ADD COLUMN classified_by TEXT")
 
     # Stage-1 requirement extraction, cached on the shared catalog row so the
@@ -577,13 +589,14 @@ def mark_catalog_stale(days: int = 30) -> int:
         ]
         if stale_ids:
             placeholders = ",".join("?" * len(stale_ids))
+            status_placeholders = ",".join("?" * len(_STALE_DEMOTABLE_STATUSES))
             conn.execute(
                 f"""
-                UPDATE user_jobs SET status='stale'
+                UPDATE user_jobs SET status='stale', classified_by='stale_timeout'
                 WHERE catalog_job_id IN ({placeholders})
-                  AND status IN ('new', 'scored')
+                  AND status IN ({status_placeholders})
                 """,
-                stale_ids,
+                (*stale_ids, *_STALE_DEMOTABLE_STATUSES),
             )
         return cur.rowcount
 
@@ -600,7 +613,14 @@ def expire_missing_catalog_jobs(ats_type: str, company_slug: str, current_urls: 
     reach here). An empty ``current_urls`` from a failed fetch would
     otherwise look identical to "this company closed every one of its
     jobs", which is almost always wrong.
+
+    ``current_urls`` is compared by ``url_hash``, not raw string equality —
+    it should be every URL the company's own listing currently shows,
+    filtered for relevance/location or not; a cosmetic difference (tracking
+    param, trailing slash, scheme casing) between the URL the catalog
+    stored and the one the fresh fetch returned must not read as "gone".
     """
+    current_hashes = {url_hash(u) for u in current_urls}
     with connect() as conn:
         rows = conn.execute(
             """
@@ -609,18 +629,19 @@ def expire_missing_catalog_jobs(ats_type: str, company_slug: str, current_urls: 
             """,
             (ats_type, company_slug),
         ).fetchall()
-        missing_ids = [r["id"] for r in rows if r["url"] not in current_urls]
+        missing_ids = [r["id"] for r in rows if url_hash(r["url"]) not in current_hashes]
         if not missing_ids:
             return 0
         placeholders = ",".join("?" * len(missing_ids))
         conn.execute(f"UPDATE catalog_jobs SET status='expired' WHERE id IN ({placeholders})", missing_ids)
+        status_placeholders = ",".join("?" * len(_STALE_DEMOTABLE_STATUSES))
         conn.execute(
             f"""
-            UPDATE user_jobs SET status='stale'
+            UPDATE user_jobs SET status='stale', classified_by='closed'
             WHERE catalog_job_id IN ({placeholders})
-              AND status IN ('new', 'scored')
+              AND status IN ({status_placeholders})
             """,
-            missing_ids,
+            (*missing_ids, *_STALE_DEMOTABLE_STATUSES),
         )
     return len(missing_ids)
 

@@ -5,7 +5,7 @@
 {% if scoring %}
 <div id="job-score-status"
   hx-get="/partials/job/{{ job.id }}/score-status"
-  hx-trigger="load, every 2s"
+  hx-trigger="load"
   hx-swap="outerHTML">
   {% with job_id=job.id, running=true, error=None %}
   {% include "partials/job_score_status.html" %}
@@ -18,7 +18,7 @@
 {% if generating %}
 <div id="job-generate-status"
   hx-get="/partials/job/{{ job.id }}/generate-status"
-  hx-trigger="load, every 3s"
+  hx-trigger="load"
   hx-swap="outerHTML">
   {% with job_id=job.id, running=true, error=None, skipped=None, stage='starting' %}
   {% include "partials/job_generate_status.html" %}

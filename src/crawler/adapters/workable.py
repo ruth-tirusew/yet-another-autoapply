@@ -16,6 +16,9 @@ class WorkableAdapter(BaseAdapter):
             return []
 
         self.company_status: dict[str, bool] = {}
+        # See GreenhouseAdapter.company_urls for why this tracks the full,
+        # pre-filter listing rather than just the jobs kept for matching.
+        self.company_urls: dict[str, set[str]] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -52,6 +55,8 @@ class WorkableAdapter(BaseAdapter):
                 return []
             for item in r.json().get("jobs", []):
                 title = item.get("title", "")
+                url = f"https://apply.workable.com/{slug}/j/{item.get('shortcode', '')}"
+                self.company_urls.setdefault(slug, set()).add(url)
                 if not is_relevant(title):
                     continue
                 loc = item.get("location", {}) or {}
@@ -67,7 +72,7 @@ class WorkableAdapter(BaseAdapter):
                     source=f"Workable ({display})",
                     title=title,
                     company=display,
-                    url=f"https://apply.workable.com/{slug}/j/{item.get('shortcode', '')}",
+                    url=url,
                     location=loc_str or "Remote",
                     date_posted=item.get("created_at", ""),
                     description=clean(item.get("description", "")),

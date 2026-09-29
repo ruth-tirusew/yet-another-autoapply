@@ -16,6 +16,9 @@ class LeverAdapter(BaseAdapter):
             return []
 
         self.company_status: dict[str, bool] = {}
+        # See GreenhouseAdapter.company_urls for why this tracks the full,
+        # pre-filter listing rather than just the jobs kept for matching.
+        self.company_urls: dict[str, set[str]] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -54,6 +57,9 @@ class LeverAdapter(BaseAdapter):
             items = data if isinstance(data, list) else data.get("data", [])
             for item in items:
                 title = item.get("text", "") or item.get("title", "")
+                url = item.get("hostedUrl") or item.get("applyUrl", "")
+                if url:
+                    self.company_urls.setdefault(slug, set()).add(url)
                 if not is_relevant(title):
                     continue
                 loc = ""
@@ -77,7 +83,7 @@ class LeverAdapter(BaseAdapter):
                     source=f"Lever ({display})",
                     title=title,
                     company=display,
-                    url=item.get("hostedUrl") or item.get("applyUrl", ""),
+                    url=url,
                     location=loc or "Remote",
                     date_posted=item.get("createdAt", ""),
                     description=clean(desc),

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sys
 import threading
 from contextlib import contextmanager
@@ -20,6 +21,28 @@ from src.config_store import get_merged_config
 from src.settings import VENDOR_HIRING_AGENT
 
 logger = logging.getLogger(__name__)
+
+EVALUATION_MODEL_PARAMS = {"temperature": 0.0, "top_p": 1.0}
+
+# Mirrors the category limits in resume_evaluation_criteria.jinja. The grader
+# doesn't reliably respect them (it has returned 40/35), so they're enforced here.
+CATEGORY_MAX = {
+    "open_source": 20,
+    "self_projects": 25,
+    "production": 35,
+    "technical_skills": 20,
+}
+# The rubric's cap for candidates whose GitHub repos are all their own.
+SELF_ONLY_OPEN_SOURCE_MAX = 8
+
+_MONTH = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?"
+# A bullet that opens with bold text and carries a date range is a job header
+# pymupdf4llm mis-rendered as a list item, e.g.
+# "- **Backend Developer · Rahove** Sep 2023 – Mar 2024".
+_BULLETED_HEADER = re.compile(
+    rf"^[ \t]*[-*•][ \t]+(\*\*[^*\n]+\*\*.*?\b{_MONTH}[ \t]+\d{{4}}[ \t]*[–—-].*)$",
+    re.MULTILINE,
+)
 
 _ha_configured = False
 _ha_lock = threading.RLock()
@@ -83,7 +106,11 @@ def extract_resume_from_pdf(pdf_path: str) -> dict:
         with hiring_agent_context():
             from pdf import PDFHandler  # type: ignore
 
-            resume = PDFHandler().extract_json_from_pdf(str(Path(pdf_path).resolve()))
+            handler = PDFHandler()
+            text = handler.extract_text_from_pdf(str(Path(pdf_path).resolve()))
+            if not text:
+                raise HiringAgentError("PDF text extraction returned no text")
+            resume = handler.extract_json_from_text(unbullet_job_headers(text))
             if resume is None:
                 raise HiringAgentError("PDF extraction returned no data")
             return resume.model_dump()
@@ -92,6 +119,32 @@ def extract_resume_from_pdf(pdf_path: str) -> dict:
     except Exception as e:
         logger.warning("[hiring_agent] PDF extraction failed: %s", e)
         raise HiringAgentError(f"PDF extraction failed: {e}") from e
+
+
+def unbullet_job_headers(markdown: str) -> str:
+    """Turn job header lines rendered as bullets back into plain lines.
+
+    Otherwise the work extractor treats the header as a bullet of the job
+    above it, and that job absorbs the next job's bullets as well.
+    """
+    return _BULLETED_HEADER.sub(r"\1", markdown)
+
+
+def clamp_evaluation(evaluation: dict, github_json: dict | None = None) -> dict:
+    """Keep category scores within the rubric's limits."""
+    projects = (github_json or {}).get("projects") or []
+    self_only = bool(projects) and all(
+        isinstance(p, dict) and p.get("project_type") == "self_project" for p in projects
+    )
+    for name, block in (evaluation.get("scores") or {}).items():
+        if not isinstance(block, dict) or name not in CATEGORY_MAX:
+            continue
+        cap = CATEGORY_MAX[name]
+        if name == "open_source" and self_only:
+            cap = SELF_ONLY_OPEN_SOURCE_MAX
+        block["max"] = CATEGORY_MAX[name]
+        block["score"] = max(0.0, min(float(block.get("score") or 0), cap))
+    return evaluation
 
 
 def resume_to_text(resume: dict, github_json: dict | None = None) -> tuple[str, str]:
@@ -138,9 +191,18 @@ def evaluate_profile(resume: dict, github_json: dict | None = None) -> dict:
             from evaluator import ResumeEvaluator  # type: ignore
 
             cfg = get_merged_config()
-            evaluator = ResumeEvaluator(model_name=cfg["quality_model"])
+            target_role = (cfg.get("hiring_agent") or {}).get("target_role") or (
+                (resume.get("basics") or {}).get("label") or ""
+            )
+            # Deterministic sampling: the grade is compared across uploads, so
+            # run-to-run variance would read as a real change in the CV.
+            evaluator = ResumeEvaluator(
+                model_name=cfg["quality_model"],
+                model_params=EVALUATION_MODEL_PARAMS,
+                target_role=target_role,
+            )
             result = evaluator.evaluate_resume(eval_input)
-            return result.model_dump()
+            return clamp_evaluation(result.model_dump(), github_json)
     except Exception as e:
         logger.warning("[hiring_agent] Profile evaluation failed: %s", e)
         raise HiringAgentError(f"Profile evaluation failed: {e}") from e

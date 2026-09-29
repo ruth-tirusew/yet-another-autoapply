@@ -1,4 +1,4 @@
-<div id="pipeline-status" {% if state.running %}hx-get="/partials/pipeline-status" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+<div id="pipeline-status" {% if state.running %}hx-get="/partials/pipeline-status" hx-trigger="every 5s [document.visibilityState==='visible']" hx-swap="outerHTML"{% endif %}>
   {% if state.idle and not state.last_run %}
   <div class="text-sm text-stone-500 dark:text-stone-400">No pipeline run yet. Use the stages above to start.</div>
   {% elif state.idle and state.last_run %}

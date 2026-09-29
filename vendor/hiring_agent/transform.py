@@ -336,7 +336,8 @@ def transform_projects(projects_list: List) -> List[Dict]:
                     "startDate": None,
                     "endDate": None,
                     "description": item.get("description", ""),
-                    "highlights": [item.get("type", "")] if item.get("type") else [],
+                    "highlights": item.get("highlights")
+                    or ([item.get("type", "")] if item.get("type") else []),
                     "url": item.get("url", None),
                     "technologies": technologies,
                     "skills": skills,

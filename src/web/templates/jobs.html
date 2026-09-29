@@ -39,7 +39,7 @@
 
 {% if matchable_new > 0 %}
 <div id="jobs-score-status" class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-xl p-4 mb-4 text-sm text-blue-900 dark:text-blue-200"
-  {% if request.query_params.get('scoring') %}hx-get="/partials/pipeline-status" hx-trigger="load, every 3s" hx-swap="innerHTML"{% endif %}>
+  {% if request.query_params.get('scoring') %}hx-get="/partials/pipeline-status" hx-trigger="load" hx-swap="innerHTML"{% endif %}>
   <p>
     <span class="font-medium">{{ matchable_new }}</span> new jobs are ready for LLM scoring
     (batch size: {{ match_limit }}).

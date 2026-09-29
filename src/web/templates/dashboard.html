@@ -64,7 +64,7 @@
       Profile loaded but not evaluated — <a href="/profile" class="font-medium underline">run evaluation</a> for better matches.
     </p>
     {% endif %}
-    <div id="dash-pipeline-log" class="mt-4" hx-get="/partials/pipeline-status" hx-trigger="load, every 3s" hx-swap="innerHTML">
+    <div id="dash-pipeline-log" class="mt-4" hx-get="/partials/pipeline-status" hx-trigger="load" hx-swap="innerHTML">
       {% include "partials/pipeline_status.html" %}
     </div>
   </div>

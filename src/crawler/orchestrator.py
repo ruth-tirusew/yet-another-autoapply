@@ -13,7 +13,7 @@ from src.crawler.registry import get_adapter
 from src.db import init_db, list_user_ids, mark_stale_jobs, upsert_job, upsert_source_registry
 
 
-def _target_company_sources() -> list[dict[str, Any]]:
+def _target_company_sources(persist: bool = True) -> list[dict[str, Any]]:
     """One synthetic source per user with an enabled target company.
 
     TargetCompaniesAdapter is registered in the adapter registry but was
@@ -22,6 +22,12 @@ def _target_company_sources() -> list[dict[str, Any]]:
     wires it into the real crawl. The resulting jobs still land in the one
     shared catalog like any other source, per-user selection just decides
     which companies get fetched at all.
+
+    ``persist`` is threaded into each source's config so
+    TargetCompaniesAdapter can skip its own direct catalog write (marking a
+    company's missing postings 'expired') on a dry run — mirroring
+    ``crawl_all``'s own persist=False, which otherwise only stops the
+    per-job ``upsert_job`` calls, not this adapter's side effect.
     """
     sources = []
     for uid in list_user_ids():
@@ -32,7 +38,7 @@ def _target_company_sources() -> list[dict[str, Any]]:
             "id": f"target-companies-user-{uid}",
             "name": f"Target companies (user {uid})",
             "adapter": "target_companies",
-            "config": {"user_id": uid},
+            "config": {"user_id": uid, "persist": persist},
         })
     return sources
 
@@ -41,7 +47,7 @@ def crawl_all(persist: bool = True, user_id: int | None = None) -> list[dict]:
     init_db()
     cfg = get_config()
     sources = [s for s in list_sources(PLATFORM_SOURCES_USER_ID) if s.get("enabled", True)]
-    sources += _target_company_sources()
+    sources += _target_company_sources(persist)
     all_jobs: list[dict] = []
     seen_urls: set[str] = set()
     platform_uid = PLATFORM_SOURCES_USER_ID

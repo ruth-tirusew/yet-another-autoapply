@@ -1,7 +1,7 @@
 <div id="job-generate-status"
   {% if running %}
   hx-get="/partials/job/{{ job_id }}/generate-status"
-  hx-trigger="every 3s"
+  hx-trigger="every 5s [document.visibilityState==='visible']"
   hx-swap="outerHTML"
   {% endif %}
   class="rounded-xl p-4 mb-4 text-sm

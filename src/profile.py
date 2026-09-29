@@ -52,7 +52,10 @@ def upload_cv(
     profile_dir = _profile_dir(uid)
     profile_dir.mkdir(parents=True, exist_ok=True)
     dest = profile_dir / "source_cv.pdf"
-    shutil.copy2(src, dest)
+    # Re-processing the stored CV passes dest itself; copying a file onto
+    # itself raises SameFileError.
+    if src != dest.resolve():
+        shutil.copy2(src, dest)
 
     warnings: list[str] = []
 

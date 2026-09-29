@@ -11,11 +11,14 @@ Return ONLY a JSON object with this structure:
   "projects": [
     {
       "name": "Project name",
-      "description": "Project description",
+      "description": "One-sentence project summary",
+      "highlights": ["Bullet 1, copied verbatim", "Bullet 2, copied verbatim"],
       "url": "Project URL",
       "technologies": ["Tech 1", "Tech 2"]
     }
   ]
 }
+
+**IMPORTANT**: Put every bullet point under a project into "highlights" as its own item, copied word for word. Do NOT merge bullets into "description", and do NOT shorten or paraphrase them.
 
 **IMPORTANT**: Return ONLY valid JSON. Do not include any explanatory text. 

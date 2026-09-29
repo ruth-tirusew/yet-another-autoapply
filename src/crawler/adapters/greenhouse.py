@@ -22,6 +22,13 @@ class GreenhouseAdapter(BaseAdapter):
         # matters for deciding whether it's safe to mark any of that
         # company's previously-seen jobs as closed.
         self.company_status: dict[str, bool] = {}
+        # Every URL this company's own listing showed, before the
+        # relevance/location filters below drop most of them — a closing
+        # check (TargetCompaniesAdapter/expire_missing_catalog_jobs) must
+        # compare against the company's *full* current listing, not just
+        # the subset this crawl happened to keep for matching, or a job
+        # that's merely irrelevant/wrong-location would read as "closed".
+        self.company_urls: dict[str, set[str]] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -58,6 +65,9 @@ class GreenhouseAdapter(BaseAdapter):
                 return []
             for item in r.json().get("jobs", []):
                 title = item.get("title", "")
+                url = item.get("absolute_url", "")
+                if url:
+                    self.company_urls.setdefault(slug, set()).add(url)
                 if not is_relevant(title):
                     continue
                 loc = item.get("location", {}).get("name", "") or "Remote"
@@ -67,7 +77,7 @@ class GreenhouseAdapter(BaseAdapter):
                     source=f"Greenhouse ({display})",
                     title=title,
                     company=display,
-                    url=item.get("absolute_url", ""),
+                    url=url,
                     location=loc,
                     date_posted=item.get("updated_at", ""),
                     description=clean(item.get("content", "")),

@@ -1,7 +1,7 @@
 <div id="score-batch-status"
   {% if state.running %}
   hx-get="/partials/pipeline-status"
-  hx-trigger="every 2s"
+  hx-trigger="every 5s [document.visibilityState==='visible']"
   hx-swap="outerHTML"
   {% endif %}
   class="text-sm">

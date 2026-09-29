@@ -30,6 +30,14 @@ class TargetCompaniesAdapter(BaseAdapter):
         if not companies:
             return []
 
+        # A dry-run crawl (crawl_all(persist=False)) must not have the side
+        # effect of expiring catalog rows — expiry is itself a persisted
+        # write, just one this adapter makes directly instead of through
+        # upsert_job. Default True so a direct/test construction of this
+        # adapter (no "persist" key in config) keeps expiring, matching
+        # this adapter's behavior before persist-gating existed.
+        persist = bool(self.config.get("persist", True))
+
         jobs: list[dict] = []
         for co in companies:
             ats = co.get("ats_type", "")
@@ -54,11 +62,22 @@ class TargetCompaniesAdapter(BaseAdapter):
             # expire_missing_catalog_jobs. company_status[slug] is absent
             # entirely if _company_entries() never even tried this slug.
             slug = co["company_slug"]
-            if getattr(adapter, "company_status", {}).get(slug):
+            if not persist or not getattr(adapter, "company_status", {}).get(slug):
+                continue
+
+            # company_urls (all URLs the listing showed, unfiltered) is
+            # what a real adapter tracks; fall back to the filtered
+            # `fetched` list for a test double/mock that doesn't set it,
+            # so a merely irrelevant/wrong-location job isn't read as
+            # "closed" on a real crawl.
+            company_urls = getattr(adapter, "company_urls", None)
+            if isinstance(company_urls, dict):
+                current_urls = company_urls.get(slug, set())
+            else:
                 current_urls = {j["url"] for j in fetched}
-                expired = expire_missing_catalog_jobs(ats, slug, current_urls)
-                if expired:
-                    print(f"  Target {slug}: {expired} job(s) no longer listed, marked expired")
+            expired = expire_missing_catalog_jobs(ats, slug, current_urls)
+            if expired:
+                print(f"  Target {slug}: {expired} job(s) no longer listed, marked expired")
         print(f"  Target companies: {len(jobs)}")
         return jobs
 

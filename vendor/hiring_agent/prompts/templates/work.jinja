@@ -14,13 +14,16 @@ Return ONLY a JSON object with this structure:
       "position": "Job title", 
       "startDate": "Start date (YYYY-MM)",
       "endDate": "End date (YYYY-MM) or 'Present'",
-      "summary": "Job description",
-      "highlights": ["Achievement 1", "Achievement 2"]
+      "summary": "One-sentence role context (team, product, company size), or null",
+      "highlights": ["Bullet 1, copied verbatim", "Bullet 2, copied verbatim"]
     }
   ]
 }
 
 **IMPORTANT**: 
+Put every bullet point under a job into "highlights" as its own item, copied word for word, including all numbers and metrics. Do NOT merge bullets into "summary", and do NOT shorten or paraphrase them.
+A line that holds a job title, company and dates is the start of a new job, even if it is formatted as a bullet.
+
 
 For date extraction, follow these rules carefully:
 

@@ -21,6 +21,9 @@ class SmartRecruitersAdapter(BaseAdapter):
             return []
 
         self.company_status: dict[str, bool] = {}
+        # See GreenhouseAdapter.company_urls for why this tracks the full,
+        # pre-filter listing rather than just the jobs kept for matching.
+        self.company_urls: dict[str, set[str]] = {}
         jobs: list[dict] = []
         multi = len(companies) > 1
         for slug, display in companies:
@@ -70,6 +73,9 @@ class SmartRecruitersAdapter(BaseAdapter):
                     break
                 for item in content:
                     title = item.get("name", "")
+                    ref = item.get("refNumber", "") or item.get("id", "")
+                    url = f"https://jobs.smartrecruiters.com/{slug}/{ref}"
+                    self.company_urls.setdefault(slug, set()).add(url)
                     if not is_relevant(title):
                         continue
                     loc = item.get("location", {}) or {}
@@ -81,12 +87,11 @@ class SmartRecruitersAdapter(BaseAdapter):
                         loc_str = str(loc)
                     if not is_worldwide(loc_str):
                         continue
-                    ref = item.get("refNumber", "") or item.get("id", "")
                     job = normalize_job(
                         source=f"SmartRecruiters ({display})",
                         title=title,
                         company=display,
-                        url=f"https://jobs.smartrecruiters.com/{slug}/{ref}",
+                        url=url,
                         location=loc_str or "Remote",
                         date_posted=item.get("releasedDate", ""),
                         description="",
